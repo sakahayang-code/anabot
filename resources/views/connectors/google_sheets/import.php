@@ -158,7 +158,7 @@ function loadSheetPreview() {
     loading.style.display = 'block';
     container.style.opacity = '0.3';
 
-    fetch('/api/v1/connectors/google-sheets/' + connId + '/preview?sheet=' + encodeURIComponent(sheetName))
+    fetch('<?= e(url('/api/v1/connectors/google-sheets/')) ?>/' + connId + '/preview?sheet=' + encodeURIComponent(sheetName))
     .then(r => r.json())
     .then(res => {
         loading.style.display = 'none';
@@ -235,7 +235,7 @@ function executeImport() {
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Mengimpor Data...';
     btn.disabled = true;
 
-    fetch('/api/v1/connectors/google-sheets/' + connId + '/import', {
+    fetch('<?= e(url('/api/v1/connectors/google-sheets/')) ?>/' + connId + '/import', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -254,7 +254,7 @@ function executeImport() {
 
         if (res.success) {
             alert('✓ Sukses! ' + res.records_processed + ' baris berhasil diimpor ke dataset "' + res.dataset_name + '" (' + res.duration_seconds + ' detik).');
-            window.location.href = '/explorer/datasets/' + res.dataset_id;
+            window.location.href = '<?= e(url('/explorer/datasets/')) ?>/' + res.dataset_id;
         } else {
             alert('✗ Gagal mengimpor data: ' + (res.error || 'Terjadi kesalahan sistem.'));
         }

@@ -337,7 +337,8 @@ function updateChartVisibility() {
 async function recalculateAnalytics(datasetId) {
     if (!confirm('Hitung ulang metrik analitik lengkap untuk dataset ini?')) return;
     try {
-        const res = await fetch(`/api/v1/analytics/datasets/${datasetId}/recalculate`, { method: 'POST' });
+        const base = window.ANABOT_BASE_URL || '';
+        const res = await fetch(`${base}/api/v1/analytics/datasets/${datasetId}/recalculate`, { method: 'POST' });
         const json = await res.json();
         if (json.success) {
             window.location.reload();

@@ -328,7 +328,7 @@ function testConnection(connId) {
     btn.innerHTML = 'Menguji...';
     btn.disabled = true;
 
-    fetch('/api/v1/connections/' + connId + '/test', {
+    fetch('<?= e(url('/api/v1/connections/')) ?>/' + connId + '/test', {
         method: 'POST',
         headers: { 'Accept': 'application/json' }
     })
@@ -359,7 +359,7 @@ function triggerSync(connId) {
     btn.innerHTML = 'Sinkronisasi...';
     btn.disabled = true;
 
-    fetch('/api/v1/connections/' + connId + '/sync', {
+    fetch('<?= e(url('/api/v1/connections/')) ?>/' + connId + '/sync', {
         method: 'POST',
         headers: { 'Accept': 'application/json' }
     })
@@ -389,7 +389,7 @@ function showJobLogs(jobId) {
     body.innerHTML = 'Memuat log...';
     modal.style.display = 'flex';
 
-    fetch('/api/v1/connections/logs/' + jobId)
+    fetch('<?= e(url('/api/v1/connections/logs/')) ?>/' + jobId)
     .then(r => r.json())
     .then(res => {
         if (!res.data || res.data.length === 0) {

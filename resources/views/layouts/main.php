@@ -16,6 +16,24 @@ declare(strict_types=1);
     
     <!-- AnaBot Modern SaaS Stylesheet -->
     <link rel="stylesheet" href="<?= e(url('assets/css/anabot.css?v=' . app_version())) ?>">
+
+    <!-- Subdirectory-Aware Client Runtime & Fetch Interceptor -->
+    <script>
+        window.ANABOT_BASE_URL = <?= json_encode(rtrim(url('/'), '/')) ?>;
+        (function() {
+            const originalFetch = window.fetch;
+            window.fetch = function(resource, init) {
+                if (typeof resource === 'string' && resource.startsWith('/')) {
+                    const base = window.ANABOT_BASE_URL;
+                    const basePath = new URL(base, window.location.origin).pathname.replace(/\/+$/, '');
+                    if (basePath && !resource.startsWith(basePath + '/')) {
+                        resource = basePath + resource;
+                    }
+                }
+                return originalFetch.call(this, resource, init);
+            };
+        })();
+    </script>
 </head>
 <body>
     <div class="app-wrapper">

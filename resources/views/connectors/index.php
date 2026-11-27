@@ -246,7 +246,7 @@ function testConnection(connId) {
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menguji...';
     btn.disabled = true;
 
-    fetch('/api/v1/connections/' + connId + '/test', {
+    fetch('<?= e(url('/api/v1/connections/')) ?>/' + connId + '/test', {
         method: 'POST',
         headers: { 'Accept': 'application/json' }
     })
@@ -280,7 +280,7 @@ function triggerSync(connId) {
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Sync...';
     btn.disabled = true;
 
-    fetch('/api/v1/connections/' + connId + '/sync', {
+    fetch('<?= e(url('/api/v1/connections/')) ?>/' + connId + '/sync', {
         method: 'POST',
         headers: { 'Accept': 'application/json' }
     })

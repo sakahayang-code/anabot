@@ -469,7 +469,7 @@ async function requestAiInterpretation() {
     `;
 
     try {
-        const res = await fetch('/api/v1/analytics/datasets/<?= $selectedDatasetId ?>/interpret-predictive', {
+        const res = await fetch('<?= e(url('/api/v1/analytics/datasets/' . (int) $selectedDatasetId . '/interpret-predictive')) ?>', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
