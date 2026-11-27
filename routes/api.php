@@ -100,6 +100,16 @@ $router->group(['prefix' => '/api/v1'], function (Router $api) {
         $authApi->get('/reports/{id}', [\AnaBot\Controllers\ReportController::class, 'apiShow']);
         $authApi->delete('/reports/{id}', [\AnaBot\Controllers\ReportController::class, 'delete']);
         $authApi->get('/reports/{id}/download', [\AnaBot\Controllers\ReportController::class, 'download']);
+
+        // Automation & Monitoring Endpoints (Phase 11)
+        $authApi->get('/automation/health', [\AnaBot\Controllers\AutomationController::class, 'apiHealth']);
+        $authApi->get('/automation/schedules', [\AnaBot\Controllers\AutomationController::class, 'apiSchedules']);
+        $authApi->post('/automation/schedules', [\AnaBot\Controllers\AutomationController::class, 'apiCreateSchedule']);
+        $authApi->post('/automation/schedules/{id}/run', [\AnaBot\Controllers\AutomationController::class, 'apiRunSchedule']);
+        $authApi->get('/automation/jobs', [\AnaBot\Controllers\AutomationController::class, 'apiJobs']);
+        $authApi->get('/automation/notifications', [\AnaBot\Controllers\AutomationController::class, 'notifications']);
+        $authApi->post('/automation/notifications/{id}/read', [\AnaBot\Controllers\AutomationController::class, 'readNotification']);
+        $authApi->post('/automation/notifications/read-all', [\AnaBot\Controllers\AutomationController::class, 'readAllNotifications']);
     });
 });
 

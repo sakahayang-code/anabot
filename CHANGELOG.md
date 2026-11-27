@@ -2,6 +2,60 @@
 
 Seluruh perubahan penting pada proyek AnaBot dicatat dalam dokumen ini. Format mengikuti standar [Keep a Changelog](https://keepachangelog.com/id/1.0.0/).
 
+## [0.12.0-dev] - 2026-11-27 (FASE 11 — Automation & Monitoring)
+
+### Ditambahkan (Added)
+- **Sistem CLI Cron Runner Terpadu (`bin/cron/`):**
+  - `bin/cron/cron_runner.php`: Master scheduler runner untuk mengevaluasi dan mengeksekusi tugas terjadwal due pada menit berjalan secara otomatis.
+  - `bin/cron/sync.php`: Runner sinkronisasi otomatis konektor platform data dengan evaluasi jadwal per koneksi (`sync_interval_minutes`) dan deteksi anomali pasca-sinkronisasi.
+  - `bin/cron/process_queue.php`: Background queue worker runner ramah shared hosting dengan batasan waktu eksekusi (*timeout guard*) dan pemrosesan sekuensial.
+  - `bin/cron/backup.php`: Pencadangan basis data SQLite otomatis berkala dengan retensi bergulir (*rolling retention*).
+  - Mekanisme Penguncian Berkas Konkurensi (`flock`): Proteksi eksklusif non-blocking (`LOCK_EX | LOCK_NB`) pada seluruh skrip cron untuk mencegah eksekusi ganda atau tumpang tindih proses (*overlapping execution*) di shared hosting.
+- **Model Penjadwalan & Notifikasi Sistem (`app/Models/`):**
+  - `ScheduledTask.php`: Manajemen tabel `scheduled_tasks`, evaluasi ekspresi cron 5 bagian murni PHP (`minute hour day_of_month month day_of_week`), resolusi alias standar (`@daily`, `@hourly`, `@weekly`, `@monthly`), kalkulasi waktu eksekusi berikutnya (`calculateNextRun`), pencegahan duplikasi dalam menit yang sama (`isDue`), dan seeding otomatis 6 tugas default platform.
+  - `Notification.php`: Manajemen tabel `notifications` untuk peringatan in-app pengguna, pelacakan status baca/belum baca (`is_read`), aksi tindak lanjut kontekstual (`action_url`), dan penyiaran peringatan sistem (`broadcastToAllUsers`).
+- **Layanan Pemantauan Kesehatan & Pemeliharaan Sistem (`app/Services/SystemMonitor.php`):**
+  - Diagnostik Kesehatan Sistem Komprehensif (`checkSystemHealth`): evaluasi integritas basis data SQLite (`PRAGMA integrity_check`), mode jurnal (WAL), timeout busy, ukuran berkas DB dan WAL, metrik penyimpanan disk, pemantauan antrean (pekerjaan pending, running, stalled > 30 menit, dan riwayat kegagalan 24 jam), serta status detak jantung cron (*heartbeat*).
+  - Rotasi & Kompresi Berkas Log (`rotateLogs`): rotasi otomatis berkas log aktif yang melebihi batas ukuran (10 MB) serta pembersihan berkas log lama yang melampaui batas hari retensi (14 hari).
+  - Retensi Cadangan Bergulir (`pruneBackups`): pemangkasan otomatis berkas cadangan SQLite lama untuk mempertahankan $N$ cadangan terbaru (default: 7 cadangan).
+- **Mesin Peringatan Anomali & Notifikasi (`app/Services/AlertService.php`):**
+  - Evaluasi Anomali Dataset Otomatis (`evaluateDatasetAnomalies`): mendeteksi anomali pasca-sinkronisasi atau terjadwal via `AnomalyDetector`, memicu notifikasi tingkat risiko (`CRITICAL` / `MODERATE`), dan mencatat audit log.
+  - Proteksi Anti-Fatigue (`hasRecentAnomalyNotification`): menekan peringatan duplikat untuk dataset yang sama dalam jendela waktu 6 jam.
+  - Deteksi Kegagalan Sinkronisasi Berulang (`checkRepeatedSyncFailures`): mendeteksi 3 kegagalan sinkronisasi berturut-turut pada koneksi dan mengirimkan peringatan darurat ke administrator.
+- **Pengontrol Web & REST API Automation (`app/Controllers/AutomationController.php`):**
+  - Rute Web:
+    - `GET /automation/schedules`: Dashboard jadwal otomasi, panduan copy-paste crontab cPanel, status cron, dan tabel tugas terjadwal.
+    - `POST /automation/schedules/create`: Pembuatan tugas terjadwal kustom.
+    - `POST /automation/schedules/{id}/toggle`: Pengalihan status aktif/non-aktif tugas.
+    - `POST /automation/schedules/{id}/run`: Eksekusi manual instan tugas terjadwal.
+    - `POST /automation/schedules/{id}/delete`: Penghapusan tugas terjadwal.
+    - `GET /automation/tasks`: Pemantau antrean background (*Sync Queue*) dengan bento KPI dan tabel riwayat pekerjaan.
+    - `POST /automation/tasks/{id}/retry`: Percobaan ulang pekerjaan sinkronisasi yang gagal.
+    - `GET /automation/health`: Diagnostik kesehatan sistem, kapasitas disk, status SQLite, dan tabel berkas cadangan.
+    - `POST /automation/backup/now`: Pembuatan cadangan database manual instan.
+    - `POST /automation/logs/rotate`: Pemicu rotasi dan pembersihan log manual.
+    - `GET /notifications`: Pusat notifikasi dan peringatan sistem in-app pengguna.
+    - `POST /notifications/{id}/read` & `POST /notifications/read-all`: Manajemen penandaan status baca notifikasi.
+  - Endpoint Web Cron Aman:
+    - `GET /cron/run?token={TOKEN}`: Endpoint cron berbasis web untuk hosting tanpa terminal/CLI cron, terproteksi token rahasia anti-akses tidak sah.
+  - REST API Endpoints (`/api/v1/automation/`):
+    - `GET /api/v1/automation/health`: Data metrik kesehatan sistem format JSON.
+    - `GET /api/v1/automation/schedules`: Daftar tugas terjadwal dan status cron.
+    - `POST /api/v1/automation/schedules`: Pembuatan jadwal baru via REST API.
+    - `POST /api/v1/automation/schedules/{id}/run`: Pemicu eksekusi tugas via API.
+    - `GET /api/v1/automation/jobs`: Daftar pekerjaan antrean sinkronisasi terpaginasi.
+    - `GET /api/v1/automation/notifications`: Daftar notifikasi in-app pengguna via API.
+- **Antarmuka Pengguna Otomasi & Pemantauan (`resources/views/automation/`):**
+  - `resources/views/automation/schedules.php`: Visualisasi status cron, panduan crontab cPanel, dan tabel tugas.
+  - `resources/views/automation/tasks.php`: Dasbor pemantau antrean dengan kartu bento metrik antrean dan badge status pekerjaan.
+  - `resources/views/automation/health.php`: Dasbor pemantauan kesehatan sistem dengan banner diagnostik interaktif dan tabel cadangan database.
+  - `resources/views/automation/notifications.php`: Antarmuka notifikasi in-app dengan pembedaan warna keparahan (*danger*, *warning*, *info*) dan tombol tandai telah dibaca.
+- **Automated Test Suite Fase 11 (`tests/Unit/AutomationTest.php`):**
+  - 10 skenario pengujian komprehensif pada isolated test database: cron expression parsing, isDue evaluation, next run timestamp calculation, ScheduledTask CRUD & toggle, concurrency file locking (`flock`), queue worker execution, atomic SQLite backup & integrity check, rolling backup retention pruning, log rotation & purging mechanics, system health diagnostics, dan anomaly alerting anti-fatigue notification lifecycle.
+  - Seluruh 16/16 automated test suites AnaBot lulus 100%.
+
+---
+
 ## [0.11.0-dev] - 2026-11-27 (FASE 10 — Report Engine)
 
 ### Ditambahkan (Added)

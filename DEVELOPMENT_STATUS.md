@@ -1,7 +1,7 @@
 # Status Pengembangan AnaBot (Development Status)
 
 Terakhir diperbarui: 2026-11-27  
-Fase Saat Ini: **FASE 10 — Selesai (Menunggu Persetujuan Masuk FASE 11)**  
+Fase Saat Ini: **FASE 11 — Selesai (Menunggu Persetujuan Masuk FASE 12)**  
 Status Integritas Data: **Aman (Seluruh Pengujian Menggunakan Database Testing Terisolasi)**
 
 ---
@@ -21,51 +21,50 @@ Status Integritas Data: **Aman (Seluruh Pengujian Menggunakan Database Testing T
 | **FASE 8** | **AI Analyst** | **SELESAI** | Context builder berbasis AnalyticsEngine, chat analitis grounded data, sesi percakapan, diagnosis akar masalah, quick action eksekutif, 13/13 test suites lulus. |
 | **FASE 9** | **Predictive Analytics & Anomaly** | **SELESAI** | Deteksi anomali matematis (IQR outlier & Z-score), forecasting moving average & Holt-Winters exponential smoothing dengan disclaimer asumsi ketat, 14/14 test suites lulus. |
 | **FASE 10** | **Report Engine** | **SELESAI** | Generator laporan mandiri multi-format (HTML, PDF 1.4 murni PHP, OpenXML XLSX via ZipArchive, streaming CSV), bento report center, unduhan privat terproteksi, 15/15 test suites lulus. |
-| **FASE 11** | **Automation & Monitoring** | *Menunggu Persetujuan* | Cron job runner (`sync.php`, `process_queue.php`, `backup.php`), rotasi log, audit trail, notifikasi anomali. |
-| **FASE 12** | **Integrasi Platform Tambahan** | *Belum Mulai* | Konektor MySQL eksternal, Custom REST API, Google Analytics, YouTube, Meta, TikTok, WooCommerce, Shopify. |
+| **FASE 11** | **Automation & Monitoring** | **SELESAI** | CLI cron runner terpadu, background queue worker, backup atomik SQLite, retensi bergulir, rotasi log, diagnostik sistem, peringatan anomali, 16/16 test suites lulus. |
+| **FASE 12** | **Integrasi Platform Tambahan** | *Menunggu Persetujuan* | Konektor MySQL eksternal, Custom REST API, Google Analytics, YouTube, Meta, TikTok, WooCommerce, Shopify. |
 | **FASE 13** | **Final Testing & Deployment Sim** | *Belum Mulai* | Pengujian end-to-end, simulasi update zero-data-loss, audit keamanan ketat, verifikasi kompatibilitas hosting. |
 
 ---
 
-## 2. Rincian Capaian FASE 10 (Report Engine)
-- [x] Engine `ReportEngine.php` untuk pembuatan dokumen multi-format deterministik:
-  - Kompilasi data analitis matematis terpadu (`compileReportData`): statistik deskriptif, laju pertumbuhan, arah tren regresi OLS, deteksi anomali, proyeksi 95% CI, dan ringkasan eksekutif AI terverifikasi tanpa halusinasi matematis.
-  - Generator Dokumen HTML5 Mandiri (`generateHtml`): CSS bertema cetak (`@media print`), kartu bento KPI, tabel terstruktur, dan grafik SVG tersemat (*embedded vector chart*).
-  - Generator Spreadsheet CSV Streaming Ramah Memori (`generateCsv`): UTF-8 BOM (`\xEF\xBB\xBF`) untuk kompatibilitas Microsoft Excel, pemisah seksi komprehensif, dan standar PHP 8.4 escape parameter.
-  - Generator Buku Kerja OpenXML XLSX Murni (`generateXlsx`): dokumen spreadsheet multi-sheet (`Ringkasan Eksekutif`, `Statistik Deskriptif`, `Deteksi Anomali`, `Proyeksi Peramalan`) menggunakan ekstensi PHP bawaan `ZipArchive` tanpa dependensi eksternal.
-  - Generator Dokumen PDF Standar 1.4 Biner Asli (`generatePdf`): pembuatan berkas PDF biner resmi murni PHP tanpa dependensi binary pihak ketiga (wkhtmltopdf/Dompdf/Node).
-  - Master Orchestrator (`buildAndSave`): mendukung pembuatan format tunggal maupun serentak 4 format (`all`) dalam satu transaksi.
-  - Automated Garbage Collection (`cleanupOldReports`): pembersihan otomatis laporan kedaluwarsa.
-- [x] Model `Report.php`:
-  - Operasi CRUD lengkap pada tabel `reports`: `create`, `find`, `getByUser` (dengan paginasi & filter format), `countByUser`, `delete`, `deleteWithFile` (pembersihan rekaman DB dan berkas fisik aman), `getStorageUsage` (perhitungan kuota & statistik per format), dan `getRecent`.
-- [x] Pengontrol Web & REST API `ReportController.php`:
-  - Web views: `index` (`/reports`), `create` (`/reports/create`), `generate` (`POST /reports/generate`), `preview` (`/reports/{id}/preview`), `download` (`/reports/{id}/download`), dan `delete` (`POST /reports/{id}/delete`).
-  - REST API Endpoints: `GET /api/v1/reports`, `POST /api/v1/reports`, `GET /api/v1/reports/{id}`, `DELETE /api/v1/reports/{id}`, `GET /api/v1/reports/{id}/download`.
-  - Penegakan isolasi single-user ownership & proteksi path traversal ketat (`validateFilePath`).
-- [x] Antarmuka Report Center Studio:
-  - `resources/views/reports/index.php`: Tata letak modern SaaS dengan kartu metrik penggunaan penyimpanan bento, tab filter format dokumen, tabel riwayat pembuatan laporan, tombol pratinjau cepat, dan unduhan langsung.
-  - `resources/views/reports/create.php`: Form perancang laporan satu-klik dengan validasi interaktif.
-  - `resources/views/reports/preview.php`: Antarmuka penampil dokumen dengan tombol cetak dokumen langsung (*browser native print API*).
-- [x] Automated Test Suite Fase 10 (`tests/Unit/ReportEngineTest.php`):
+## 2. Rincian Capaian FASE 11 (Automation & Monitoring)
+- [x] Sistem CLI Cron Runner Terpadu (`bin/cron/`):
+  - `bin/cron/cron_runner.php`: Master scheduler runner otomatis dengan deteksi menit berjalan.
+  - `bin/cron/sync.php`: Runner sinkronisasi otomatis konektor dengan evaluasi interval waktu dan deteksi anomali pasca-sinkronisasi.
+  - `bin/cron/process_queue.php`: Background queue worker runner dengan pembatasan waktu eksekusi ramah shared hosting.
+  - `bin/cron/backup.php`: Pencadangan basis data SQLite otomatis dengan retensi bergulir (*rolling retention*).
+  - Mekanisme penguncian berkas konkurensi (`flock`): Proteksi eksklusif non-blocking (`LOCK_EX | LOCK_NB`) untuk mencegah eksekusi tumpang tindih.
+- [x] Model Penjadwalan & Notifikasi:
+  - `ScheduledTask.php`: Evaluator ekspresi cron 5 bagian murni PHP, penanganan alias (`@daily`, `@hourly`, dll), kalkulasi waktu eksekusi berikutnya (`calculateNextRun`), pencegahan eksekusi duplikat dalam menit yang sama (`isDue`), dan seeding 6 tugas default platform.
+  - `Notification.php`: Manajemen notifikasi pengguna in-app, status baca/belum baca, tautan tindakan kontekstual, dan penyiaran peringatan sistem.
+- [x] Layanan Pemantauan & Pemeliharaan:
+  - `SystemMonitor.php`: Diagnostik komprehensif kesehatan sistem (SQLite `PRAGMA integrity_check`, mode WAL, busy timeout, kapasitas disk hosting, pemantauan antrean pending/running/stalled/failed, dan detak jantung cron), rotasi log otomatis (10 MB / 14 hari), dan pemangkasan cadangan SQLite bergulir (7 cadangan).
+  - `AlertService.php`: Evaluasi anomali dataset otomatis pasca-sinkronisasi, proteksi anti-fatigue 6 jam, dan deteksi kegagalan sinkronisasi berulang (3x berturut-turut).
+- [x] Pengontrol Web & REST API `AutomationController.php`:
+  - Web views: `schedules` (`/automation/schedules`), `tasks` (`/automation/tasks`), `health` (`/automation/health`), dan `notifications` (`/notifications`).
+  - Web Cron Endpoint: `GET /cron/run?token={TOKEN}` untuk hosting tanpa CLI cron.
+  - REST API Endpoints: `/api/v1/automation/health`, `/schedules`, `/jobs`, `/notifications`.
+- [x] Antarmuka Pengguna Otomasi & Pemantauan (`resources/views/automation/`):
+  - `schedules.php`: Visualisasi status cron, panduan salin-tempel crontab cPanel, dan tabel tugas.
+  - `tasks.php`: Dasbor antrean background dengan kartu bento dan badge status pekerjaan.
+  - `health.php`: Dasbor diagnostik kesehatan sistem dengan tombol cadangkan database dan rotasi log.
+  - `notifications.php`: Pusat notifikasi in-app dengan badge tingkat keparahan (*danger*, *warning*, *info*).
+- [x] Automated Test Suite Fase 11 (`tests/Unit/AutomationTest.php`):
   - 10 skenario pengujian komprehensif lulus 100%.
-  - Seluruh 15/15 automated test suites AnaBot lulus 100%.
+  - Seluruh 16/16 automated test suites AnaBot lulus 100%.
 
 ---
 
-## 3. Rencana Tugas untuk FASE 11 (Automation & Monitoring)
-Setelah pengguna memberikan persetujuan untuk FASE 11:
-1. Pembangunan **CLI Cron Job Runner System (`bin/cron/`)**:
-   - `bin/cron/sync.php`: Runner terjadwal untuk eksekusi batch sinkronisasi data konektor dengan locking file (`flock`) agar tidak terjadi proses tumpang tindih (*concurrency guard*).
-   - `bin/cron/process_queue.php`: Worker pemrosesan antrean latar belakang (*background queue runner*) ramah shared hosting.
-   - `bin/cron/backup.php`: Pembuat cadangan basis data SQLite berkala otomatis ke `storage/backups/` dengan retensi cadangan bergulir (*rolling backup retention*).
-2. Pembangunan **Log Rotation & System Health Monitor (`app/Services/SystemMonitor.php`)**:
-   - Rotasi dan kompresi berkas log terintegrasi untuk mencegah konsumsi penyimpanan berlebih di shared hosting.
-   - Health monitoring: verifikasi integritas SQLite (`PRAGMA integrity_check`), pemantauan penggunaan disk penyimpanan, dan status worker antrean.
-3. Pembangunan **Anomaly Alerting Engine (`app/Services/AlertService.php`)**:
-   - Evaluasi anomali otomatis pasca-sinkronisasi data.
-   - Perekaman notifikasi anomali dan peringatan ke tabel `system_alerts` serta pengiriman webhook/email (jika dikonfigurasi).
-4. Pembangunan **Antarmuka Automation & Monitoring Dashboard (`resources/views/automation/`)**:
-   - Tampilan visual status cron, jadwal sinkronisasi aktif, riwayat eksekusi worker antrean, dan pusat peringatan sistem.
-5. Pembangunan **Automated Test Suite Fase 11**:
-   - Pengujian CLI cron runner, concurrency file lock, rotasi log, backup scheduler, dan alert trigger pada lingkungan pengujian terisolasi.
+## 3. Rencana Tugas untuk FASE 12 (Integrasi Platform Tambahan)
+Setelah pengguna memberikan persetujuan untuk FASE 12:
+1. Pembangunan **Konektor Basis Data Eksternal (MySQL/PostgreSQL READ-ONLY)**:
+   - Koneksi aman via PDO dengan query terisolasi dan skema pembacaan data waktu nyata.
+2. Pembangunan **Konektor REST API Kustom (Custom JSON/REST Endpoint)**:
+   - Antarmuka adaptor untuk REST API eksternal dengan pemetaan kolom JSON dan paging cursor.
+3. Pembangunan **Konektor Platform Digital Analytics & Ads (Meta Ads, Google Analytics 4, TikTok Ads)**:
+   - Integrasi metrik performa pemasaran digital berbasis API resmi.
+4. Pembangunan **Konektor E-Commerce (WooCommerce & Shopify)**:
+   - Penarikan metrik transaksi, pesanan, dan tren produk secara aman.
+5. Pembangunan **Automated Test Suite Fase 12**:
+   - Pengujian konektivitas driver baru dan verifikasi kontrak READ-ONLY.
 

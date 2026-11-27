@@ -16,6 +16,7 @@ use AnaBot\Core\Router;
 /** @var Router $router */
 
 $router->get('/', [HomeController::class, 'index']);
+$router->get('/cron/run', [\AnaBot\Controllers\AutomationController::class, 'webCronRun']);
 
 // Guest Authentication Routes
 $router->get('/login', [AuthController::class, 'showLogin'], ['guest']);
@@ -91,28 +92,22 @@ $router->group(['middleware' => ['auth']], function (Router $auth) {
         );
     });
 
-    // 8. Automation (Roadmap Phase 11)
-    $auth->get('/automation/schedules', function () {
-        (new ModulePlaceholderController())->show(
-            'Automation - Schedules',
-            11,
-            'Konfigurasi jadwal sinkronisasi dan backup database SQLite via CLI Cron.',
-            [
-                ['title' => 'Cron Job Runner', 'desc' => 'Eksekusi batch sinkronisasi pada interval yang telah ditentukan.']
-            ]
-        );
-    });
+    // 8. Automation & Monitoring (Active Phase 11)
+    $auth->get('/automation/schedules', [\AnaBot\Controllers\AutomationController::class, 'schedules']);
+    $auth->post('/automation/schedules/create', [\AnaBot\Controllers\AutomationController::class, 'createSchedule']);
+    $auth->post('/automation/schedules/{id}/toggle', [\AnaBot\Controllers\AutomationController::class, 'toggleSchedule']);
+    $auth->post('/automation/schedules/{id}/run', [\AnaBot\Controllers\AutomationController::class, 'runSchedule']);
+    $auth->post('/automation/schedules/{id}/delete', [\AnaBot\Controllers\AutomationController::class, 'deleteSchedule']);
+    $auth->get('/automation/tasks', [\AnaBot\Controllers\AutomationController::class, 'tasks']);
+    $auth->post('/automation/tasks/{id}/retry', [\AnaBot\Controllers\AutomationController::class, 'retryJob']);
+    $auth->get('/automation/health', [\AnaBot\Controllers\AutomationController::class, 'health']);
+    $auth->post('/automation/backup/now', [\AnaBot\Controllers\AutomationController::class, 'manualBackup']);
+    $auth->post('/automation/logs/rotate', [\AnaBot\Controllers\AutomationController::class, 'manualRotateLogs']);
 
-    $auth->get('/automation/tasks', function () {
-        (new ModulePlaceholderController())->show(
-            'Automation - Tasks & Queue',
-            11,
-            'Monitoring antrean pekerjaan latar belakang (background queue).',
-            [
-                ['title' => 'Status Antrean', 'desc' => 'Pantau status tugas pending, running, completed, atau failed.']
-            ]
-        );
-    });
+    // In-App Notifications
+    $auth->get('/notifications', [\AnaBot\Controllers\AutomationController::class, 'notifications']);
+    $auth->post('/notifications/{id}/read', [\AnaBot\Controllers\AutomationController::class, 'readNotification']);
+    $auth->post('/notifications/read-all', [\AnaBot\Controllers\AutomationController::class, 'readAllNotifications']);
 
     // 9. AI Management (Active Phase 7: Multi-Provider AI Framework)
     $auth->get('/ai/providers', [\AnaBot\Controllers\AIController::class, 'settingsPage']);
