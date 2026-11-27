@@ -91,6 +91,37 @@ $statusBadge = match ($connection['status']) {
         <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.875rem;">
             <?= e($flashError) ?>
         </div>
+    <!-- Google Sheets Permission Banner -->
+    <?php if ($connection['connector_code'] === 'google_sheets'): ?>
+        <?php
+            $sa = !empty($credentials['service_account_json']) ? (is_array($credentials['service_account_json']) ? $credentials['service_account_json'] : json_decode((string)$credentials['service_account_json'], true)) : null;
+            $saEmail = $sa['client_email'] ?? null;
+        ?>
+        <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; font-size: 0.8125rem;">
+            <div style="font-weight: 600; color: #3b82f6; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                Panduan Izin Akses Google Sheets (Mencegah Error 403 Permission Denied)
+            </div>
+            <?php if (!empty($saEmail)): ?>
+                <div style="color: var(--text-muted); line-height: 1.5;">
+                    Koneksi ini menggunakan Service Account. Agar AnaBot dapat membaca spreadsheet, buka file Google Sheet Anda &gt; klik tombol <strong>Bagikan (Share)</strong> di kanan atas &gt; tambahkan email Service Account ini sebagai <strong>Viewer / Pelihat</strong>:
+                </div>
+                <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <code style="background: var(--bg-surface); padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border-color); color: #60a5fa; font-family: monospace; font-size: 0.8125rem; user-select: all;"><?= e($saEmail) ?></code>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('<?= e($saEmail) ?>'); alert('Email Service Account disalin ke clipboard!');" style="font-size: 0.75rem; padding: 4px 8px;">
+                        Salin Email
+                    </button>
+                </div>
+            <?php else: ?>
+                <div style="color: var(--text-muted); line-height: 1.5;">
+                    Jika menggunakan Google Cloud API Key: Buka file Google Sheet Anda di browser &gt; klik tombol <strong>Bagikan (Share)</strong> &gt; pada bagian <strong>Akses umum (General access)</strong> ubah dari 'Dibatasi' menjadi <strong>'Siapa saja yang memiliki link' (Anyone with the link)</strong> dengan peran <strong>Pelihat (Viewer)</strong>.
+                </div>
+            <?php endif; ?>
+        </div>
     <?php endif; ?>
 
     <!-- Overview Cards Grid -->

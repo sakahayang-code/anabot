@@ -41,6 +41,66 @@ class GoogleSheetsConnector extends BaseConnector
     }
 
     /**
+     * Get Service Account client_email if configured.
+     */
+    public function getServiceAccountEmail(): ?string
+    {
+        $sa = $this->credentials['service_account_json'] ?? $this->credentials['service_account'] ?? null;
+        if (!empty($sa)) {
+            $saData = is_array($sa) ? $sa : json_decode((string) $sa, true);
+            if (is_array($saData) && !empty($saData['client_email'])) {
+                return (string) $saData['client_email'];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Build Google Sheets API endpoint URL with query params and API key if present.
+     */
+    public function buildApiUrl(string $subpath, string $token, array $query = []): string
+    {
+        $spreadsheetId = $this->getSpreadsheetId();
+        $url = self::API_BASE . '/' . urlencode($spreadsheetId) . $subpath;
+
+        if (str_starts_with($token, 'AIzaSy') || !empty($this->credentials['api_key'])) {
+            $apiKey = str_starts_with($token, 'AIzaSy') ? $token : (string) ($this->credentials['api_key'] ?? '');
+            if (!empty($apiKey)) {
+                $query['key'] = $apiKey;
+            }
+        }
+
+        if (!empty($query)) {
+            $separator = str_contains($url, '?') ? '&' : '?';
+            $url .= $separator . http_build_query($query);
+        }
+
+        return $url;
+    }
+
+    /**
+     * Format friendly, actionable error message for HTTP 403 Permission Denied.
+     */
+    public function formatPermissionDeniedMessage(): string
+    {
+        $saEmail = $this->getServiceAccountEmail();
+        if (!empty($saEmail)) {
+            return "Akses ke Google Sheet Ditolak (HTTP 403: The caller does not have permission).\n\n" .
+                   "Solusi: Dokumen spreadsheet belum dibagikan ke Service Account Anda.\n" .
+                   "1. Buka file Google Sheet Anda di browser.\n" .
+                   "2. Klik tombol 'Bagikan' (Share) di pojok kanan atas.\n" .
+                   "3. Tambahkan email Service Account ini:\n" .
+                   "   👉 {$saEmail}\n" .
+                   "4. Berikan akses minimal 'Pelihat' (Viewer), lalu klik 'Kirim' / 'Selesai'.";
+        }
+
+        return "Akses ke Google Sheet Ditolak (HTTP 403: The caller does not have permission).\n\n" .
+               "Solusi:\n" .
+               "1. Jika menggunakan Google Cloud API Key: Buka Google Sheet > klik tombol 'Bagikan' (Share) > pada 'Akses umum' ubah dari 'Dibatasi' menjadi 'Siapa saja yang memiliki link' (Viewer/Pelihat).\n" .
+               "2. Jika menggunakan Service Account: Tempelkan file JSON Service Account pada formulir pengaturan koneksi dan bagikan spreadsheet ke email Service Account tersebut.";
+    }
+
+    /**
      * Test live connectivity and credentials.
      */
     public function testConnection(): array
@@ -64,7 +124,7 @@ class GoogleSheetsConnector extends BaseConnector
                 ];
             }
 
-            $url = self::API_BASE . '/' . urlencode($spreadsheetId) . '?includeGridData=false';
+            $url = $this->buildApiUrl('', $token, ['includeGridData' => 'false']);
             $headers = $this->buildHeaders($token);
             $response = $this->httpClient->get($url, $headers);
 
@@ -85,10 +145,17 @@ class GoogleSheetsConnector extends BaseConnector
                 ];
             }
 
-            $errMessage = $response['json']['error']['message'] ?? "Google API returned HTTP {$response['status']}";
+            if ($response['status'] === 403) {
+                $errMessage = $this->formatPermissionDeniedMessage();
+            } elseif ($response['status'] === 404) {
+                $errMessage = "Dokumen Spreadsheet tidak ditemukan (HTTP 404). Pastikan Spreadsheet ID atau URL yang Anda masukkan sudah benar.";
+            } else {
+                $errMessage = $response['json']['error']['message'] ?? "Google API returned HTTP {$response['status']}";
+            }
+
             return [
                 'success' => false,
-                'message' => "Gagal terhubung ke Google Sheets: {$errMessage}",
+                'message' => $errMessage,
                 'details' => [
                     'status_code' => $response['status'],
                     'error' => $response['json']['error'] ?? $response['body'],
@@ -116,10 +183,13 @@ class GoogleSheetsConnector extends BaseConnector
 
         try {
             $token = $this->resolveAccessToken();
-            $url = self::API_BASE . '/' . urlencode($spreadsheetId) . '?includeGridData=false';
+            $url = $this->buildApiUrl('', $token, ['includeGridData' => 'false']);
             $response = $this->httpClient->get($url, $this->buildHeaders($token));
 
             if ($response['status'] !== 200 || !isset($response['json']['sheets'])) {
+                if ($response['status'] === 403) {
+                    $this->log('warning', "Google Sheets 403: " . ($response['json']['error']['message'] ?? 'Permission Denied'));
+                }
                 return [];
             }
 
@@ -161,11 +231,17 @@ class GoogleSheetsConnector extends BaseConnector
         $token = $this->resolveAccessToken();
         // Read header + sample rows (e.g. A1:ZZ6)
         $endRow = 1 + max(1, $sampleLimit);
-        $range = urlencode("{$targetSheet}!A1:ZZ{$endRow}");
-        $url = self::API_BASE . '/' . urlencode($spreadsheetId) . "/values/{$range}?majorDimension=ROWS";
+        $range = "{$targetSheet}!A1:ZZ{$endRow}";
+        $url = $this->buildApiUrl('/values/' . urlencode($range), $token, ['majorDimension' => 'ROWS']);
 
         $response = $this->httpClient->get($url, $this->buildHeaders($token));
         if ($response['status'] !== 200) {
+            if ($response['status'] === 403) {
+                throw new RuntimeException($this->formatPermissionDeniedMessage());
+            }
+            if ($response['status'] === 404) {
+                throw new RuntimeException("Dokumen Spreadsheet tidak ditemukan (HTTP 404). Pastikan Spreadsheet ID atau URL yang Anda masukkan sudah benar.");
+            }
             throw new RuntimeException("Gagal mengambil preview data: Status {$response['status']}");
         }
 
@@ -263,13 +339,19 @@ class GoogleSheetsConnector extends BaseConnector
         $endRow = $startRow + $limit - 1;
 
         $token = $this->resolveAccessToken();
-        $range = urlencode("{$sheetName}!A{$startRow}:ZZ{$endRow}");
-        $url = self::API_BASE . '/' . urlencode($spreadsheetId) . "/values/{$range}?majorDimension=ROWS";
+        $range = "{$sheetName}!A{$startRow}:ZZ{$endRow}";
+        $url = $this->buildApiUrl('/values/' . urlencode($range), $token, ['majorDimension' => 'ROWS']);
 
         // READ-ONLY: HTTP GET
         $response = $this->httpClient->get($url, $this->buildHeaders($token));
 
         if ($response['status'] !== 200) {
+            if ($response['status'] === 403) {
+                throw new RuntimeException($this->formatPermissionDeniedMessage());
+            }
+            if ($response['status'] === 404) {
+                throw new RuntimeException("Dokumen Spreadsheet tidak ditemukan (HTTP 404). Periksa kembali Spreadsheet ID atau URL dokumen Anda.");
+            }
             throw new RuntimeException("Google Sheets API error: Status {$response['status']} - {$response['body']}");
         }
 
@@ -357,8 +439,8 @@ class GoogleSheetsConnector extends BaseConnector
 
     private function getHeaderMeta(string $spreadsheetId, string $sheetName, string $token): array
     {
-        $range = urlencode("{$sheetName}!A1:ZZ1");
-        $url = self::API_BASE . '/' . urlencode($spreadsheetId) . "/values/{$range}?majorDimension=ROWS";
+        $range = "{$sheetName}!A1:ZZ1";
+        $url = $this->buildApiUrl('/values/' . urlencode($range), $token, ['majorDimension' => 'ROWS']);
 
         try {
             $res = $this->httpClient->get($url, $this->buildHeaders($token));

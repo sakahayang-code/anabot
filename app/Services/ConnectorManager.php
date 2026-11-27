@@ -245,6 +245,14 @@ class ConnectorManager
             if ($targetDataset) {
                 $resourceId = (string) $targetDataset['name'];
             } else {
+                if ($code === 'google_sheets') {
+                    $test = $driver->testConnection();
+                    if (!$test['success']) {
+                        throw new RuntimeException($test['message']);
+                    }
+                    throw new RuntimeException("Koneksi ini belum memiliki dataset tersimpan. Silakan buka detail koneksi dan klik 'Import Studio' untuk memilih lembar kerja yang ingin diimpor.");
+                }
+
                 $available = $driver->getAvailableDatasets();
                 if (!empty($available)) {
                     $resourceId = (string) $available[0]['id'];
