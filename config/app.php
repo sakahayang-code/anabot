@@ -17,10 +17,10 @@ return [
     // Physical Paths
     'paths' => [
         'base' => dirname(__DIR__),
-        'storage' => env('STORAGE_PATH', dirname(__DIR__) . '/storage'),
-        'logs' => env('LOG_PATH', dirname(__DIR__) . '/storage/logs'),
-        'backups' => env('BACKUP_PATH', dirname(__DIR__) . '/storage/backups'),
-        'reports' => env('REPORT_PATH', dirname(__DIR__) . '/storage/reports'),
+        'storage' => str_starts_with((string) env('STORAGE_PATH', ''), '/') ? env('STORAGE_PATH') : dirname(__DIR__) . '/' . ltrim((string) env('STORAGE_PATH', 'storage'), '/'),
+        'logs' => str_starts_with((string) env('LOG_PATH', ''), '/') ? env('LOG_PATH') : dirname(__DIR__) . '/' . ltrim((string) env('LOG_PATH', 'storage/logs'), '/'),
+        'backups' => str_starts_with((string) env('BACKUP_PATH', ''), '/') ? env('BACKUP_PATH') : dirname(__DIR__) . '/' . ltrim((string) env('BACKUP_PATH', 'storage/backups'), '/'),
+        'reports' => str_starts_with((string) env('REPORT_PATH', ''), '/') ? env('REPORT_PATH') : dirname(__DIR__) . '/' . ltrim((string) env('REPORT_PATH', 'storage/reports'), '/'),
         'cache' => dirname(__DIR__) . '/storage/cache',
         'views' => dirname(__DIR__) . '/resources/views',
     ],

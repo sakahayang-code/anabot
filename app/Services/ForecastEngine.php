@@ -432,6 +432,19 @@ class ForecastEngine
     }
 
     /**
+     * Alias for forecastDataset().
+     */
+    public function generateForecast(
+        int $datasetId,
+        string $metricName,
+        string $method = 'ols',
+        int $horizon = 6,
+        array $options = []
+    ): array {
+        return $this->forecastDataset($datasetId, $metricName, $method, $horizon, $options);
+    }
+
+    /**
      * Generate human-readable label for next period step.
      */
     private function generateNextPeriodLabel(string $lastPeriod, int $step): string

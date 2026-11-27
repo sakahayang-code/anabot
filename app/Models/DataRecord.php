@@ -99,4 +99,30 @@ class DataRecord
         $stmt->execute([':dataset_id' => $datasetId]);
         return $stmt;
     }
+
+    /**
+     * Get records for a dataset with limit and offset.
+     */
+    public static function getByDatasetId(int $datasetId, int $limit = 50, int $offset = 0): array
+    {
+        $db = Database::getInstance();
+        $rows = $db->query(
+            "SELECT id, dataset_id, external_id, record_date, data_json, created_at 
+             FROM data_records 
+             WHERE dataset_id = :dataset_id 
+             ORDER BY id ASC 
+             LIMIT :limit OFFSET :offset",
+            [
+                ':dataset_id' => $datasetId,
+                ':limit' => $limit,
+                ':offset' => $offset,
+            ]
+        );
+
+        foreach ($rows as &$row) {
+            $row['data'] = json_decode((string) $row['data_json'], true) ?: [];
+        }
+
+        return $rows;
+    }
 }

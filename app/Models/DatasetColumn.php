@@ -21,6 +21,14 @@ class DatasetColumn
         );
     }
 
+    /**
+     * Alias for forDataset().
+     */
+    public static function getByDatasetId(int $datasetId): array
+    {
+        return self::forDataset($datasetId);
+    }
+
     public static function find(int $id): ?array
     {
         $db = Database::getInstance();

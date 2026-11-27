@@ -2,6 +2,47 @@
 
 Seluruh perubahan penting pada proyek AnaBot dicatat dalam dokumen ini. Format mengikuti standar [Keep a Changelog](https://keepachangelog.com/id/1.0.0/).
 
+## [0.11.0-dev] - 2026-11-27 (FASE 10 — Report Engine)
+
+### Ditambahkan (Added)
+- **Mesin Pembuat Dokumen Multi-Format Mandiri (`app/Services/ReportEngine.php`):**
+  - Kompilasi data analitis deterministik terpadu (`compileReportData`): mengintegrasikan statistik deskriptif, laju pertumbuhan, arah tren OLS, deteksi anomali, proyeksi masa depan 95% CI, dan ringkasan eksekutif AI terverifikasi tanpa halusinasi matematis.
+  - Generator Dokumen HTML5 Mandiri (`generateHtml`): dokumen laporan eksekutif mandiri lengkap dengan CSS bertema cetak (`@media print`), kartu metrik bento, tabel terstruktur, dan grafik SVG tersemat (*embedded vector chart*).
+  - Generator Spreadsheet CSV Streaming Ramah Memori (`generateCsv`): pembuatan berkas CSV terstruktur dengan UTF-8 BOM (`\xEF\xBB\xBF`) untuk kompatibilitas sempurna dengan Microsoft Excel, pemisah seksi komprehensif, dan penggunaan format parameter escape standar PHP 8.4.
+  - Generator Buku Kerja OpenXML XLSX Murni (`generateXlsx`): pembuatan berkas spreadsheet multi-lembar kerja (`Ringkasan Eksekutif`, `Statistik Deskriptif`, `Deteksi Anomali`, `Proyeksi Peramalan`) menggunakan ekstensi bawaan PHP `ZipArchive` tanpa dependensi pihak ketiga atau Node/Python.
+  - Generator Dokumen Standar PDF 1.4 Biner Asli (`generatePdf`): pembuatan berkas PDF biner resmi (struktur catalog, page tree, Helvetica font object, content streams, cross-reference table xref, dan trailer EOF) murni dalam bahasa PHP tanpa ketergantungan library eksternal (wkhtmltopdf/Dompdf/Node).
+  - Orkestrator Pembangun Laporan Master (`buildAndSave`): mendukung pembuatan format tunggal maupun pembuatan serentak seluruh 4 format (`all`) sekaligus dalam satu transaksi penyimpanan.
+  - Pembersih Sampah Laporan Otomatis (`cleanupOldReports`): sistem *garbage collection* otomatis untuk menghapus berkas laporan sementara atau kedaluwarsa berdasarkan ambang batas waktu.
+- **Model Manajemen Laporan Terstruktur (`app/Models/Report.php`):**
+  - Operasi CRUD lengkap pada tabel `reports`: `create`, `find`, `getByUser` (dengan paginasi dan filter format), `countByUser`, `delete`, `deleteWithFile` (pembersihan rekaman DB dan berkas fisik aman), `getStorageUsage` (perhitungan total kuota penyimpanan dan rincian per format), dan `getRecent`.
+  - Dukungan resolusi path penyimpanan absolut dan relatif yang dijangkarkan ke direktori proyek utama.
+- **Pengontrol Web & REST API Report Center (`app/Controllers/ReportController.php`):**
+  - Rute Tampilan Web:
+    - `GET /reports`: Dashboard Pusat Laporan dengan kartu bento metrik penyimpanan, tab filter format dokumen, tabel riwayat pembuatan laporan, tombol pratinjau cepat, dan unduhan langsung.
+    - `GET /reports/create`: Wizard pembuatan laporan interaktif (pemilihan dataset, penentuan metrik kalkulasi, opsi format dokumen, rentang tanggal, dan saklar interpretasi AI).
+    - `POST /reports/generate`: Pemrosesan pembuatan laporan berbasis form web dengan token anti-CSRF dan pengalihan dinamis ke halaman pratinjau.
+    - `GET /reports/{id}/preview`: Penampil laporan layar penuh dengan iframe terisolasi untuk HTML dan kartu ringkasan dokumen untuk berkas biner (PDF/XLSX/CSV).
+    - `GET /reports/{id}/download`: Mekanisme pengunduhan privat aman dengan header HTTP strictly-controlled (`Content-Disposition: attachment`, `Cache-Control: private, no-store`).
+    - `POST /reports/{id}/delete`: Penghapusan laporan dan berkas fisiknya secara aman.
+  - REST API Endpoints:
+    - `GET /api/v1/reports`: Daftar laporan terpaginasi pengguna beserta statistik agregasi penyimpanan.
+    - `POST /api/v1/reports`: Pembangkitan laporan on-demand melalui antarmuka REST API.
+    - `GET /api/v1/reports/{id}`: Detail metadata laporan individual.
+    - `DELETE /api/v1/reports/{id}`: Penghapusan laporan via API.
+    - `GET /api/v1/reports/{id}/download`: Pengunduhan streaming berkas via API.
+  - Sistem Keamanan & Proteksi Akses:
+    - Penegakan isolasi single-user ownership (pengguna hanya dapat mengakses laporan miliknya).
+    - Proteksi traversal path fisik ketat (`validateFilePath`) memastikan seluruh akses berkas terkunci di dalam direktori penyimpanan laporan (`storage/reports`).
+- **Antarmuka Pengguna Pusat Laporan Studio (`resources/views/reports/`):**
+  - `resources/views/reports/index.php`: Tata letak modern SaaS dengan indikator visual kuota kapasitas penyimpanan, kartu ringkasan format, dan tabel status laporan.
+  - `resources/views/reports/create.php`: Form perancang laporan satu-klik dengan validasi interaktif.
+  - `resources/views/reports/preview.php`: Antarmuka penampil dokumen dengan tombol cetak dokumen langsung (*browser native print API*).
+- **Automated Test Suite Fase 10 (`tests/Unit/ReportEngineTest.php`):**
+  - 10 skenario pengujian komprehensif pada database pengujian terisolasi: Report CRUD & kuota storage, kompilasi data deterministik, generasi HTML dengan grafik SVG, streaming CSV dengan UTF-8 BOM, OpenXML multi-sheet XLSX via ZipArchive, binary PDF 1.4 murni PHP, multi-format master generation, path traversal security blocking, single-user ownership privacy enforcement, dan automated garbage collection.
+  - Seluruh 15/15 automated test suites AnaBot lulus 100%.
+
+---
+
 ## [0.10.0-dev] - 2026-11-27 (FASE 9 — Predictive Analytics & Anomaly Detection)
 
 ### Ditambahkan (Added)

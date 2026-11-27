@@ -93,6 +93,13 @@ $router->group(['prefix' => '/api/v1'], function (Router $api) {
         $authApi->post('/ai/sessions/{id}/quick-action', [\AnaBot\Controllers\AIAnalystController::class, 'quickAction']);
         $authApi->get('/ai/sessions/{id}/context', [\AnaBot\Controllers\AIAnalystController::class, 'getContextPreview']);
         $authApi->post('/ai/sessions/{id}/clear', [\AnaBot\Controllers\AIAnalystController::class, 'clearMessages']);
+
+        // Report Engine Endpoints (Phase 10)
+        $authApi->get('/reports', [\AnaBot\Controllers\ReportController::class, 'apiIndex']);
+        $authApi->post('/reports', [\AnaBot\Controllers\ReportController::class, 'apiCreate']);
+        $authApi->get('/reports/{id}', [\AnaBot\Controllers\ReportController::class, 'apiShow']);
+        $authApi->delete('/reports/{id}', [\AnaBot\Controllers\ReportController::class, 'delete']);
+        $authApi->get('/reports/{id}/download', [\AnaBot\Controllers\ReportController::class, 'download']);
     });
 });
 

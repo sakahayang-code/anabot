@@ -72,18 +72,13 @@ $router->group(['middleware' => ['auth']], function (Router $auth) {
     $auth->get('/analytics/anomalies', [\AnaBot\Controllers\PredictiveController::class, 'predictivePage']);
     $auth->get('/predictions', [\AnaBot\Controllers\PredictiveController::class, 'predictivePage']);
 
-    // 7. Reports (Roadmap Phase 10)
-    $auth->get('/reports', function () {
-        (new ModulePlaceholderController())->show(
-            'Report Engine',
-            10,
-            'Generator dokumen laporan profesional dalam format PDF, XLSX, CSV, dan HTML mandiri.',
-            [
-                ['title' => 'Ekspor Multi-Format', 'desc' => 'Pembuatan dokumen PDF/XLSX/CSV secara otomatis dari database.'],
-                ['title' => 'Storage Privat', 'desc' => 'Laporan tersimpan di storage terproteksi session autentikasi.']
-            ]
-        );
-    });
+    // 7. Reports (Active Phase 10)
+    $auth->get('/reports', [\AnaBot\Controllers\ReportController::class, 'index']);
+    $auth->get('/reports/create', [\AnaBot\Controllers\ReportController::class, 'create']);
+    $auth->post('/reports/generate', [\AnaBot\Controllers\ReportController::class, 'generate']);
+    $auth->get('/reports/{id}/preview', [\AnaBot\Controllers\ReportController::class, 'preview']);
+    $auth->get('/reports/{id}/download', [\AnaBot\Controllers\ReportController::class, 'download']);
+    $auth->post('/reports/{id}/delete', [\AnaBot\Controllers\ReportController::class, 'delete']);
 
     $auth->get('/reports/scheduled', function () {
         (new ModulePlaceholderController())->show(
