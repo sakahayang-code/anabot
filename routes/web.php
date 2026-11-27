@@ -170,41 +170,11 @@ $router->group(['middleware' => ['auth']], function (Router $auth) {
         );
     });
 
-    // 9. AI Management (Roadmap Phase 7)
-    $auth->get('/ai/providers', function () {
-        (new ModulePlaceholderController())->show(
-            'AI Management - Providers',
-            7,
-            'Pengaturan Multi-Provider AI (Gemini, OpenAI, Claude, dan Compatible Providers).',
-            [
-                ['title' => 'Enkripsi API Key', 'desc' => 'Kunci API disimpan terenkripsi AES-256-GCM.'],
-                ['title' => 'Provider Fallback', 'desc' => 'Otomatis beralih ke provider cadangan jika provider utama mengalami limit.']
-            ]
-        );
-    });
-
-    $auth->get('/ai/models', function () {
-        (new ModulePlaceholderController())->show(
-            'AI Management - Models',
-            7,
-            'Katalog model AI, ukuran konteks window, dan penetapan model default per tugas.',
-            [
-                ['title' => 'Pemilihan Model', 'desc' => 'Pilih model cerdas untuk analisis mendalam atau model cepat untuk ringkasan.']
-            ]
-        );
-    });
-
-    $auth->get('/ai/usage', function () {
-        (new ModulePlaceholderController())->show(
-            'AI Management - Usage & Cost',
-            7,
-            'Pemantauan konsumsi token dan estimasi biaya per request secara transparan.',
-            [
-                ['title' => 'Audit Penggunaan Token', 'desc' => 'Pencatatan token input, token output, dan waktu eksekusi milidetik.'],
-                ['title' => 'Batas Anggaran Bulanan', 'desc' => 'Mencegah pembengkakan biaya API di luar batas yang ditentukan.']
-            ]
-        );
-    });
+    // 9. AI Management (Active Phase 7: Multi-Provider AI Framework)
+    $auth->get('/ai/providers', [\AnaBot\Controllers\AIController::class, 'settingsPage']);
+    $auth->get('/ai/models', [\AnaBot\Controllers\AIController::class, 'settingsPage']);
+    $auth->get('/ai/usage', [\AnaBot\Controllers\AIController::class, 'settingsPage']);
+    $auth->get('/settings/ai', [\AnaBot\Controllers\AIController::class, 'settingsPage']);
 
     // 10. Settings (Settings, Database, Backups)
     $auth->get('/settings', function () {

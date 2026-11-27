@@ -4,6 +4,47 @@ Seluruh perubahan penting pada proyek AnaBot dicatat dalam dokumen ini. Format m
 
 ---
 
+## [0.8.0-dev] - 2026-11-27 (FASE 7 — Multi-Provider AI Framework)
+
+### Ditambahkan (Added)
+- **Kontrak Standar Multi-Provider AI (`app/AI/Contracts/AIProviderInterface.php` & `app/AI/Providers/BaseProvider.php`):**
+  - Antarmuka generik yang mendefinisikan metode `generateText()`, `generateChat()`, `estimateCost()`, `isConfigured()`, dan `getSupportedModels()`.
+  - Kelas abstrak `BaseProvider` dengan estimasi token heuristik, pemfilteran parameter suhu/token, dan masking kunci sensitif.
+- **Implementasi Driver Multi-Provider Resmi PHP Native 8.4 cURL:**
+  - `GeminiProvider.php`: Driver Google Gemini API v1beta (`gemini-1.5-pro`, `gemini-1.5-flash`, `gemini-2.0-flash`) dengan pemisahan `systemInstruction` dan penanganan autentikasi query parameter `?key=`.
+  - `OpenAIProvider.php`: Driver OpenAI Chat Completions API (`gpt-4o`, `gpt-4o-mini`, `gpt-4-turbo`) dengan bearer token authentication dan parsing response terstandardisasi.
+  - `ClaudeProvider.php`: Driver Anthropic Messages API (`claude-3-5-sonnet-20241022`, `claude-3-5-haiku-20241022`, `claude-3-opus-20240229`) dengan parameter `system` tingkat atas, header `x-api-key`, dan `anthropic-version: 2023-06-01`.
+  - `CompatibleProvider.php`: Driver fleksibel protokol OpenAI-compatible untuk penyedia open-source dan alternatif (Groq, DeepSeek, Mistral, Ollama, OpenRouter).
+- **Model Manajemen Konfigurasi AI & Enkripsi Kunci (`app/Models/AIProvider.php` & `app/Models/AIModel.php`):**
+  - Penyimpanan API Key terenkripsi aman secara otomatis menggunakan **AES-256-GCM** dengan rotasi IV per catatan di tabel `ai_providers`.
+  - Registrasi model dinamis, pelacakan kapabilitas konteks token (`max_context_tokens`), serta pemisahan biaya input/output per sejuta token (`cost_per_1k_input` dan `cost_per_1k_output`).
+- **Orkestrator Cerdas Failover & Anggaran Token (`app/AI/AIManager.php`):**
+  - Mekanisme failover otomatis berantai: jika provider utama mengalami HTTP 429 (Rate Limit) atau kendala jaringan, secara cerdas beralih ke provider cadangan (fallback).
+  - Penegakan pagu anggaran token bulanan (`monthly_token_budget`): Memblokir konsumsi berlebih sebelum pemanggilan API luar.
+  - Pencatatan jejak audit komprehensif ke tabel SQLite `ai_usage_logs` mencakup provider ID, model, prompt tokens, completion tokens, latency (ms), estimasi biaya ($), dan status transaksi.
+- **Pengelola Prompt Bergaransi Anti-Halusinasi (`app/AI/PromptManager.php`):**
+  - Penegakan kepatuhan aturan Aturan 1.14 & 2.3: AI dilarang keras mengarang atau menginterpolasi angka statistik.
+  - Injeksi otomatis fakta komputasi deterministik dari `AnalyticsEngine` (Mean, CAGR, Tren OLS, Matriks Korelasi Pearson, Pareto 80/20) langsung ke System Prompt.
+  - Templating struktur respons analitis terstandar (Ringkasan Eksekutif, Bukti Data Numerik, Diagnosis & Pola, Rekomendasi Aksi Konkret).
+- **Pengontrol Web & REST API AI (`app/Controllers/AIController.php`):**
+  - Halaman antarmuka manajemen: `settingsPage` (`/settings/ai`, `/ai/providers`).
+  - REST API endpoint:
+    - `GET /api/v1/ai/providers`: Mengambil daftar provider, model, status konfigurasi, dan saldo token.
+    - `POST /api/v1/ai/providers/{id}`: Memperbarui API key terenkripsi, status aktif/nonaktif, provider default, dan batas anggaran token.
+    - `POST /api/v1/ai/test/{code}`: Pengujian koneksi API langsung (ping test) ke provider terkait.
+    - `POST /api/v1/ai/generate`: Endpoint pengujian inferensi prompt langsung via AIManager.
+    - `GET /api/v1/ai/usage`: Riwayat log audit pemakaian token dan ringkasan metrik biaya AI.
+- **Antarmuka Pengaturan AI Terpadu (`resources/views/ai/settings.php`):**
+  - Panel konfigurasi kartu bento untuk Gemini, OpenAI, Claude, dan OpenAI-Compatible dengan indikator status aktif/nonaktif dan badge default.
+  - Modal penyimpanan API Key terenkripsi dengan proteksi masking password dan pengujian koneksi instan.
+  - Monitor anggaran token bulanan interaktif dengan visual progress bar persentase penggunaan kuota.
+  - Tabel riwayat audit transaksi log token real-time dengan status status badge, token count, dan biaya desimal mikro.
+- **Automated Test Suite Phase 7 (`tests/Unit/AIFrameworkTest.php`):**
+  - 10 skenario pengujian komprehensif pada database SQLite terisolasi: kontrak interface provider, formatting payload Gemini/OpenAI/Claude/Compatible, enkripsi & dekripsi kunci AES-256-GCM, failover provider otomatis saat simulasi HTTP 429, penegakan ambang batas anggaran token, audit logging `ai_usage_logs`, dan guardrail anti-halusinasi `PromptManager`.
+  - **12/12 automated test suites lulus 100%**.
+
+---
+
 ## [0.7.0-dev] - 2026-11-27 (FASE 6 — Analytics Engine)
 
 ### Ditambahkan (Added)

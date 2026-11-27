@@ -70,5 +70,12 @@ $router->group(['prefix' => '/api/v1'], function (Router $api) {
         $authApi->get('/analytics/datasets/{id}/correlation', [\AnaBot\Controllers\AnalyticsController::class, 'correlationApi']);
         $authApi->get('/analytics/datasets/{id}/breakdown', [\AnaBot\Controllers\AnalyticsController::class, 'breakdownApi']);
         $authApi->post('/analytics/datasets/{id}/recalculate', [\AnaBot\Controllers\AnalyticsController::class, 'recalculateApi']);
+
+        // Multi-Provider AI Framework Endpoints (Phase 7)
+        $authApi->get('/ai/providers', [\AnaBot\Controllers\AIController::class, 'providersApi']);
+        $authApi->post('/ai/providers/{id}', [\AnaBot\Controllers\AIController::class, 'updateProviderApi']);
+        $authApi->post('/ai/test/{code}', [\AnaBot\Controllers\AIController::class, 'testProviderApi']);
+        $authApi->post('/ai/generate', [\AnaBot\Controllers\AIController::class, 'generateApi']);
+        $authApi->get('/ai/usage', [\AnaBot\Controllers\AIController::class, 'usageApi']);
     });
 });

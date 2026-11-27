@@ -30,11 +30,12 @@ use AnaBot\Tests\Unit\DataExplorerTest;
 use AnaBot\Tests\Unit\ConnectorFrameworkTest;
 use AnaBot\Tests\Unit\GoogleSheetsIntegrationTest;
 use AnaBot\Tests\Unit\AnalyticsEngineTest;
+use AnaBot\Tests\Unit\AIFrameworkTest;
 
 $app = App::getInstance()->boot();
 
 echo "========================================================" . PHP_EOL;
-echo "  ANABOT AUTOMATED TEST SUITE (FASE 1 - FASE 6)" . PHP_EOL;
+echo "  ANABOT AUTOMATED TEST SUITE (FASE 1 - FASE 7)" . PHP_EOL;
 echo "  PHP: " . PHP_VERSION . " | Environment: TESTING" . PHP_EOL;
 echo "========================================================" . PHP_EOL . PHP_EOL;
 
@@ -50,6 +51,7 @@ $suites = [
     'Connector Framework & Sync Queue' => new ConnectorFrameworkTest(),
     'Google Sheets First Integration & Auto-Schema' => new GoogleSheetsIntegrationTest(),
     'Analytics Engine & Statistical Calculation' => new AnalyticsEngineTest(),
+    'Multi-Provider AI Framework & Failover' => new AIFrameworkTest(),
 ];
 
 $passedSuites = 0;
