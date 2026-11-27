@@ -34,7 +34,7 @@ $title = $pageTitle ?? 'Dashboard';
         </div>
 
         <!-- Logout Button -->
-        <form method="POST" action="/logout" style="margin: 0;">
+        <form method="POST" action="<?= e(url('/logout')) ?>" style="margin: 0;">
             <?= csrf_field() ?>
             <button type="submit" class="btn btn-outline btn-sm" title="Keluar dari sesi" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.3);">
                 Keluar

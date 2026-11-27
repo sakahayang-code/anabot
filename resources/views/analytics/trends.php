@@ -231,7 +231,7 @@ $trendLabel = match($trendDir) {
 </div>
 
 <!-- Chart.js Integration Script -->
-<script src="/assets/js/chart.min.js"></script>
+<script src="<?= e(url('assets/js/chart.min.js')) ?>"></script>
 <script>
 let trendChartInstance = null;
 

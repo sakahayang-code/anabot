@@ -87,7 +87,27 @@ class Response
         }
 
         extract($data, EXTR_SKIP);
+        ob_start();
         require $fullPath;
+        $html = (string) ob_get_clean();
+
+        // Automatically prefix root-relative links, assets, and form actions if running in a subdirectory
+        if (function_exists('url')) {
+            $basePath = (string) parse_url(url('/'), PHP_URL_PATH);
+            $subfolder = rtrim($basePath, '/');
+            if (!empty($subfolder)) {
+                $prefix = ltrim($subfolder, '/');
+                $html = (string) preg_replace_callback(
+                    "#\\b(href|src|action)=([\\x27\\x22])/(?!/|" . preg_quote($prefix, '#') . "(?:/|[\\x27\\x22]))([^\\x27\\x22]*)[\\x27\\x22]#i",
+                    function ($m) use ($subfolder) {
+                        return "{$m[1]}={$m[2]}{$subfolder}/{$m[3]}{$m[2]}";
+                    },
+                    $html
+                );
+            }
+        }
+
+        echo $html;
         exit;
     }
 }

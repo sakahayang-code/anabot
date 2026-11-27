@@ -241,7 +241,7 @@ $breakdownItems = $breakdown['items'] ?? [];
 </div>
 
 <!-- Chart.js Integration Script -->
-<script src="/assets/js/chart.min.js"></script>
+<script src="<?= e(url('assets/js/chart.min.js')) ?>"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const breakdown = <?= json_encode($breakdownItems) ?>;

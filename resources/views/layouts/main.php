@@ -11,10 +11,11 @@ declare(strict_types=1);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <meta name="theme-color" content="#0b1120">
+    <base href="<?= e(url('/')) ?>/">
     <title><?= e($pageTitle ?? 'AnaBot') ?> - AI Analytics Robot</title>
     
     <!-- AnaBot Modern SaaS Stylesheet -->
-    <link rel="stylesheet" href="/assets/css/anabot.css?v=<?= app_version() ?>">
+    <link rel="stylesheet" href="<?= e(url('assets/css/anabot.css?v=' . app_version())) ?>">
 </head>
 <body>
     <div class="app-wrapper">
@@ -42,8 +43,8 @@ declare(strict_types=1);
     </div>
 
     <!-- Local Standalone Chart.js Bundle (Zero external CDN dependency) -->
-    <script src="/assets/js/chart.min.js"></script>
+    <script src="<?= e(url('assets/js/chart.min.js')) ?>"></script>
     <!-- AnaBot Interactive Framework -->
-    <script src="/assets/js/anabot.js?v=<?= app_version() ?>"></script>
+    <script src="<?= e(url('assets/js/anabot.js?v=' . app_version())) ?>"></script>
 </body>
 </html>
