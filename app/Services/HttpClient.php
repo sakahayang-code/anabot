@@ -145,7 +145,10 @@ class HttpClient
             $statusCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $headerSize = (int) curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 
-            curl_close($ch);
+            if (is_resource($ch)) {
+                @curl_close($ch);
+            }
+            unset($ch);
 
             // Redacted logging
             $this->logRequest($method, $url, $preparedHeaders, $requestBody, $statusCode, $durationMs, $curlErrno ? $curlError : null);

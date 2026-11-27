@@ -9,7 +9,7 @@ define('ANABOT_START', microtime(true));
 
 // Enhanced error visibility during bootstrap if APP_DEBUG is enabled
 ini_set('display_errors', '1');
-error_reporting(E_ALL);
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
 try {
     // 1. Standalone Zero-Dependency PSR-4 Autoloader with Composer fallback

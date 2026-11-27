@@ -152,10 +152,13 @@ class App
 
     private function registerErrorHandlers(): void
     {
-        error_reporting(E_ALL);
+        error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
         set_error_handler(function (int $level, string $message, string $file, int $line) {
             if (!(error_reporting() & $level)) {
+                return false;
+            }
+            if ($level === E_DEPRECATED || $level === E_USER_DEPRECATED) {
                 return false;
             }
             throw new \ErrorException($message, 0, $level, $file, $line);
