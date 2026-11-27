@@ -35,11 +35,12 @@ use AnaBot\Tests\Unit\AIAnalystTest;
 use AnaBot\Tests\Unit\PredictiveAnalyticsTest;
 use AnaBot\Tests\Unit\ReportEngineTest;
 use AnaBot\Tests\Unit\AutomationTest;
+use AnaBot\Tests\Unit\AdditionalConnectorsTest;
 
 $app = App::getInstance()->boot();
 
 echo "========================================================" . PHP_EOL;
-echo "  ANABOT AUTOMATED TEST SUITE (FASE 1 - FASE 11)" . PHP_EOL;
+echo "  ANABOT AUTOMATED TEST SUITE (FASE 1 - FASE 12)" . PHP_EOL;
 echo "  PHP: " . PHP_VERSION . " | Environment: TESTING" . PHP_EOL;
 echo "========================================================" . PHP_EOL . PHP_EOL;
 
@@ -60,6 +61,7 @@ $suites = [
     'Predictive Analytics & Anomaly Detection' => new PredictiveAnalyticsTest(),
     'Report Engine (Multi-Format & Secure Storage)' => new ReportEngineTest(),
     'Automation, Scheduler & System Monitoring' => new AutomationTest(),
+    'Additional Platform Connectors (FASE 12)' => new AdditionalConnectorsTest(),
 ];
 
 $passedSuites = 0;

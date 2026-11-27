@@ -2,6 +2,57 @@
 
 Seluruh perubahan penting pada proyek AnaBot dicatat dalam dokumen ini. Format mengikuti standar [Keep a Changelog](https://keepachangelog.com/id/1.0.0/).
 
+## [0.13.0-dev] - 2026-11-27 (FASE 12 — Integrasi Platform Tambahan)
+
+### Ditambahkan (Added)
+- **Konektor MySQL / MariaDB Read-Only (`app/Connectors/MySQL/MySQLConnector.php`):**
+  - Kategori `database`, autentikasi `database`, port default 3306.
+  - Penegakan Kontrak Mutlak READ-ONLY: pemblokiran ketat kata kunci DDL/DML termutasi (`INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, `TRUNCATE`, `CREATE`, `REPLACE`, `GRANT`, `REVOKE`, `LOCK`, `UNLOCK`, `CALL`, `EXEC`, `SET`, `RENAME`, `KILL`).
+  - Penemuan skema tabel otomatis (`SHOW TABLES`, `SHOW KEYS`), sanitasi nama identifier basis data anti-SQL injection, dan paginasi kursor berbasis primary key atau offset.
+- **Konektor WooCommerce REST API (`app/Connectors/WooCommerce/WooCommerceConnector.php`):**
+  - Kategori `ecommerce`, autentikasi `api_key` dengan Consumer Key (`ck_...`) dan Consumer Secret (`cs_...`) via HTTP Basic Authorization.
+  - Dataset bawaan: `orders` (pesanan penjualan & total pendapatan), `products` (katalog produk, varian & stok inventaris), `customers` (data riwayat belanja & pelanggan).
+  - Paginasi berbasis header `X-WP-TotalPages` dan `X-WP-Total` secara aman melalui HTTP GET.
+- **Konektor Shopify Admin REST API (`app/Connectors/Shopify/ShopifyConnector.php`):**
+  - Kategori `ecommerce`, autentikasi `oauth2` via header `X-Shopify-Access-Token` dengan sanitasi domain toko (`*.myshopify.com`).
+  - Dataset bawaan: `orders` (transaksi, status finansial & total pembayaran), `products` (katalog produk & varian), `customers` (basis pelanggan & pesanan).
+  - Paginasi kursor efisien memanfaatkan parameter `since_id` dan header link paginasi Shopify.
+- **Konektor Google Analytics 4 (`app/Connectors/GoogleAnalytics/GoogleAnalyticsConnector.php`):**
+  - Kategori `analytics`, autentikasi `oauth2` dengan scope `https://www.googleapis.com/auth/analytics.readonly`.
+  - Integrasi GA4 Data API v1beta (`https://analyticsdata.googleapis.com/v1beta/properties/{propertyId}:runReport`).
+  - Dataset bawaan: `daily_traffic` (activeUsers, sessions, screenPageViews, bounceRate, averageSessionDuration), `traffic_sources` (sessionSource, sessionMedium, conversions), `user_demographics` (country, city, deviceCategory), `event_counts` (eventName, eventCount, totalUsers).
+  - Normalisasi otomatis tanggal (YYYYMMDD ke YYYY-MM-DD), casting metrik numerik, dan paginasi offset kursor.
+- **Konektor Google Search Console (`app/Connectors/SearchConsole/SearchConsoleConnector.php`):**
+  - Kategori `seo`, autentikasi `oauth2` dengan scope `https://www.googleapis.com/auth/webmasters.readonly`.
+  - Integrasi Search Console API v3 (`https://www.googleapis.com/webmasters/v3/sites/{siteUrl}/searchAnalytics/query`).
+  - Dataset bawaan: `search_performance` (agregasi impresi harian, klik, CTR & posisi), `top_queries` (kueri pencarian & kata kunci organik), `top_pages` (halaman landing populer), `device_breakdown` (kinerja per perangkat desktop, mobile, tablet).
+  - Normalisasi persentase rasio klik (CTR 0-100%) dan pembulatan posisi ranking rata-rata.
+- **Konektor YouTube Analytics (`app/Connectors/YouTube/YouTubeConnector.php`):**
+  - Kategori `video`, autentikasi `oauth2` dengan scope `https://www.googleapis.com/auth/yt-analytics.readonly`.
+  - Integrasi YouTube Analytics API v2 (`https://youtubeanalytics.googleapis.com/v2/reports`).
+  - Dataset bawaan: `channel_metrics` (penayangan harian, waktu tonton, pelanggan baru/hilang, suka & komentar), `video_engagement` (metrik performa per video teratas), `audience_geography` (distribusi penonton per negara).
+  - Paginasi berbasis `startIndex` dan `maxResults`.
+- **Konektor Meta Ads & Graph API (`app/Connectors/Meta/MetaAdsConnector.php`):**
+  - Kategori `social_ads`, autentikasi `oauth2` dengan scope `ads_read` dan `read_insights`.
+  - Integrasi Graph API v19.0 (`https://graph.facebook.com/v19.0/{adAccountId}/insights`).
+  - Dataset bawaan: `campaign_insights` (kinerja kampanye: spend, impressions, clicks, CPC, CPM, CTR, reach), `ad_sets` (analisis set iklan), `ad_reach` (jangkauan harian akun).
+  - Format akun `act_{id}` otomatis dan navigasi kursor `paging.cursors.after`.
+- **Konektor TikTok Shop & Ads (`app/Connectors/TikTok/TikTokConnector.php`):**
+  - Kategori `social_ads`, autentikasi `oauth2` dengan scope `business.data.read`.
+  - Integrasi TikTok Marketing API v1.3 (`https://business-api.tiktok.com/open_api/v1.3/report/integrated/get/`).
+  - Dataset bawaan: `campaign_metrics` (spend, impresi, klik, CPC, konversi), `ad_performance` (kinerja materi iklan), `daily_reach` (agregasi jangkauan harian).
+  - Paginasi berbasis nomor halaman (`page`) dan total halaman (`total_page`).
+- **Registrasi Driver Lengkap (`config/connectors.php` & `ConnectorManager.php`):**
+  - Seluruh 10 platform konektor kini memiliki concrete driver terdaftar dan siap diinstansiasi secara otomatis.
+- **Pembaruan Form Konektor Interaktif (`resources/views/connectors/create.php` & `ConnectorController.php`):**
+  - Penambahan input form dinamis spesifik platform (Host/Port/DB untuk MySQL, URL & Consumer Key/Secret untuk WooCommerce, Shop Domain untuk Shopify, Property ID untuk GA4, Ad Account untuk Meta, Advertiser ID untuk TikTok, Channel ID untuk YouTube).
+  - Penyimpanan kredensial terenkripsi AES-256-GCM komprehensif di `ConnectorController::store()`.
+- **Automated Test Suite Fase 12 (`tests/Unit/AdditionalConnectorsTest.php`):**
+  - 10 skenario pengujian unit terisolasi mencakup verifikasi seluruh 10 driver konektor, penegakan kontrak read-only, pemblokiran DDL/DML terlarang pada MySQL, mock HTTP response fetching, paginasi kursor, transformasi data, dan sanitasi kredensial rahasia.
+  - Seluruh 17/17 automated test suites AnaBot lulus 100%.
+
+---
+
 ## [0.12.0-dev] - 2026-11-27 (FASE 11 — Automation & Monitoring)
 
 ### Ditambahkan (Added)

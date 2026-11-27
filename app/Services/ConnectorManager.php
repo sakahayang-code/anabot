@@ -5,7 +5,15 @@ namespace AnaBot\Services;
 
 use AnaBot\Connectors\ConnectorInterface;
 use AnaBot\Connectors\CustomAPI\CustomAPIConnector;
+use AnaBot\Connectors\GoogleAnalytics\GoogleAnalyticsConnector;
 use AnaBot\Connectors\GoogleSheets\GoogleSheetsConnector;
+use AnaBot\Connectors\Meta\MetaAdsConnector;
+use AnaBot\Connectors\MySQL\MySQLConnector;
+use AnaBot\Connectors\SearchConsole\SearchConsoleConnector;
+use AnaBot\Connectors\Shopify\ShopifyConnector;
+use AnaBot\Connectors\TikTok\TikTokConnector;
+use AnaBot\Connectors\WooCommerce\WooCommerceConnector;
+use AnaBot\Connectors\YouTube\YouTubeConnector;
 use AnaBot\Core\Database;
 use AnaBot\Core\Logger;
 use InvalidArgumentException;
@@ -36,8 +44,16 @@ class ConnectorManager
         $this->syncQueue = $syncQueue ?? new SyncQueueManager($this->db);
         $this->logger = $logger ?? new Logger();
 
-        // Register default concrete drivers
+        // Register all supported platform connector drivers
         $this->registerDriver('google_sheets', GoogleSheetsConnector::class);
+        $this->registerDriver('google_analytics', GoogleAnalyticsConnector::class);
+        $this->registerDriver('search_console', SearchConsoleConnector::class);
+        $this->registerDriver('youtube', YouTubeConnector::class);
+        $this->registerDriver('meta', MetaAdsConnector::class);
+        $this->registerDriver('tiktok', TikTokConnector::class);
+        $this->registerDriver('woocommerce', WooCommerceConnector::class);
+        $this->registerDriver('shopify', ShopifyConnector::class);
+        $this->registerDriver('mysql', MySQLConnector::class);
         $this->registerDriver('custom_api', CustomAPIConnector::class);
     }
 

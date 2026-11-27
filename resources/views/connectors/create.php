@@ -69,12 +69,114 @@ $currentCode = $selectedCode ?? 'custom_api';
                         Kredensial Akses (Terenkripsi AES-256-GCM)
                     </h3>
 
-                    <?php if ($connector['auth_type'] === 'oauth2'): ?>
+                    <?php if ($currentCode === 'mysql'): ?>
+                        <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 12px; margin-bottom: 14px;">
+                            <div>
+                                <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">Host Basis Data *</label>
+                                <input type="text" name="host" class="form-control" required placeholder="127.0.0.1 atau db.domainanda.com" value="127.0.0.1" style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">Port *</label>
+                                <input type="number" name="port" class="form-control" required placeholder="3306" value="3306" style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">Nama Basis Data (Database Name) *</label>
+                            <input type="text" name="database" class="form-control" required placeholder="app_production" style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">Username DB *</label>
+                                <input type="text" name="username" class="form-control" required placeholder="readonly_user" style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">Password DB *</label>
+                                <input type="password" name="password" class="form-control" required placeholder="••••••••" style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                            </div>
+                        </div>
+                    <?php elseif ($currentCode === 'woocommerce'): ?>
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">URL Toko WooCommerce (Site URL) *</label>
+                            <input type="url" name="site_url" class="form-control" required placeholder="https://tokosaya.com" style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">Consumer Key (ck_...) *</label>
+                                <input type="text" name="consumer_key" class="form-control" required placeholder="ck_xxxxxxxxxxxx" style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">Consumer Secret (cs_...) *</label>
+                                <input type="password" name="consumer_secret" class="form-control" required placeholder="cs_xxxxxxxxxxxx" style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                            </div>
+                        </div>
+                    <?php elseif ($currentCode === 'shopify'): ?>
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">Domain Toko Shopify (shop_domain) *</label>
+                            <input type="text" name="shop_domain" class="form-control" required placeholder="toko-anda.myshopify.com" style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">Shopify Admin Access Token *</label>
+                            <input type="password" name="access_token" class="form-control" required placeholder="shpat_xxxxxxxxxxxxxxxxxxxx" style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                        </div>
+                    <?php elseif ($currentCode === 'google_analytics'): ?>
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">GA4 Property ID (Angka 9 Digit) *</label>
+                            <input type="text" name="property_id" class="form-control" required placeholder="Contoh: 123456789 atau properties/123456789" style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                        </div>
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">Access Token / OAuth Token</label>
+                            <input type="password" name="access_token" class="form-control" placeholder="ya29.a0AfH6SM..." style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">Google Service Account JSON (Alternatif Kunci Layanan)</label>
+                            <textarea name="service_account_json" class="form-control" rows="3" placeholder='{"type": "service_account", "project_id": "...", "private_key": "..."}' style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace; font-size: 0.75rem;"></textarea>
+                        </div>
+                    <?php elseif ($currentCode === 'search_console'): ?>
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">Site URL / Domain Property *</label>
+                            <input type="text" name="site_url" class="form-control" required placeholder="https://example.com/ atau sc-domain:example.com" style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                        </div>
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">Access Token / OAuth Token</label>
+                            <input type="password" name="access_token" class="form-control" placeholder="ya29.a0AfH6SM..." style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">Google Service Account JSON (Opsional)</label>
+                            <textarea name="service_account_json" class="form-control" rows="3" placeholder='{"type": "service_account", ...}' style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace; font-size: 0.75rem;"></textarea>
+                        </div>
+                    <?php elseif ($currentCode === 'youtube'): ?>
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">Channel ID (Biarkan 'mine' untuk channel akun sendiri)</label>
+                            <input type="text" name="channel_id" class="form-control" value="mine" placeholder="mine atau UCxxxxxxxxxxxx" style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">YouTube Access Token *</label>
+                            <input type="password" name="access_token" class="form-control" required placeholder="ya29.a0AfH6SM..." style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                        </div>
+                    <?php elseif ($currentCode === 'meta'): ?>
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">Meta Ad Account ID *</label>
+                            <input type="text" name="ad_account_id" class="form-control" required placeholder="act_1234567890 atau 1234567890" style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">Meta Graph Access Token (ads_read, read_insights) *</label>
+                            <input type="password" name="access_token" class="form-control" required placeholder="EAAB..." style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                        </div>
+                    <?php elseif ($currentCode === 'tiktok'): ?>
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">TikTok Advertiser ID *</label>
+                            <input type="text" name="advertiser_id" class="form-control" required placeholder="Contoh: 71829304859" style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">TikTok Marketing API Access Token *</label>
+                            <input type="password" name="access_token" class="form-control" required placeholder="Access-Token..." style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                        </div>
+                    <?php elseif ($connector['auth_type'] === 'oauth2'): ?>
                         <div style="margin-bottom: 14px;">
                             <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">
-                                Access Token / API Key
+                                Access Token / API Key *
                             </label>
-                            <input type="password" name="access_token" class="form-control" placeholder="ya29.a0AfH6SM..." style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                            <input type="password" name="access_token" class="form-control" required placeholder="ya29.a0AfH6SM..." style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
                         </div>
                         <div>
                             <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">

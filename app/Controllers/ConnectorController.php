@@ -104,22 +104,25 @@ class ConnectorController
         $userId = Auth::id() ?? 1;
         $connectionId = $this->connectionModel->create((int) $connector['id'], $userId, $name, $interval, $autoSync);
 
-        // Prepare credentials based on auth type
+        // Prepare credentials and connection configurations
         $credentials = [];
-        $tokenType = 'Bearer';
+        $tokenType = match ($connector['auth_type'] ?? '') {
+            'database' => 'Database',
+            'api_key'  => (!empty($input['consumer_key']) ? 'Basic' : 'ApiKey'),
+            default    => 'Bearer',
+        };
 
-        if (!empty($input['api_key'])) {
-            $credentials['api_key'] = trim($input['api_key']);
-            $tokenType = 'ApiKey';
-        }
-        if (!empty($input['access_token'])) {
-            $credentials['access_token'] = trim($input['access_token']);
-        }
-        if (!empty($input['refresh_token'])) {
-            $credentials['refresh_token'] = trim($input['refresh_token']);
-        }
-        if (!empty($input['base_url'])) {
-            $credentials['base_url'] = trim($input['base_url']);
+        $allowedFields = [
+            'api_key', 'access_token', 'refresh_token', 'base_url',
+            'site_url', 'shop_domain', 'property_id', 'ad_account_id', 'advertiser_id', 'channel_id',
+            'consumer_key', 'consumer_secret', 'spreadsheet_id', 'spreadsheet_url', 'service_account_json',
+            'host', 'port', 'database', 'username', 'password', 'charset',
+        ];
+
+        foreach ($allowedFields as $field) {
+            if (isset($input[$field]) && $input[$field] !== '') {
+                $credentials[$field] = is_string($input[$field]) ? trim($input[$field]) : $input[$field];
+            }
         }
 
         // Store encrypted credentials

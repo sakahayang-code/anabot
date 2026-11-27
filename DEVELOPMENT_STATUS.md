@@ -1,7 +1,7 @@
 # Status Pengembangan AnaBot (Development Status)
 
 Terakhir diperbarui: 2026-11-27  
-Fase Saat Ini: **FASE 11 — Selesai (Menunggu Persetujuan Masuk FASE 12)**  
+Fase Saat Ini: **FASE 12 — Selesai (Menunggu Persetujuan Masuk FASE 13 — Final Testing & Deployment Sim)**  
 Status Integritas Data: **Aman (Seluruh Pengujian Menggunakan Database Testing Terisolasi)**
 
 ---
@@ -22,49 +22,42 @@ Status Integritas Data: **Aman (Seluruh Pengujian Menggunakan Database Testing T
 | **FASE 9** | **Predictive Analytics & Anomaly** | **SELESAI** | Deteksi anomali matematis (IQR outlier & Z-score), forecasting moving average & Holt-Winters exponential smoothing dengan disclaimer asumsi ketat, 14/14 test suites lulus. |
 | **FASE 10** | **Report Engine** | **SELESAI** | Generator laporan mandiri multi-format (HTML, PDF 1.4 murni PHP, OpenXML XLSX via ZipArchive, streaming CSV), bento report center, unduhan privat terproteksi, 15/15 test suites lulus. |
 | **FASE 11** | **Automation & Monitoring** | **SELESAI** | CLI cron runner terpadu, background queue worker, backup atomik SQLite, retensi bergulir, rotasi log, diagnostik sistem, peringatan anomali, 16/16 test suites lulus. |
-| **FASE 12** | **Integrasi Platform Tambahan** | *Menunggu Persetujuan* | Konektor MySQL eksternal, Custom REST API, Google Analytics, YouTube, Meta, TikTok, WooCommerce, Shopify. |
-| **FASE 13** | **Final Testing & Deployment Sim** | *Belum Mulai* | Pengujian end-to-end, simulasi update zero-data-loss, audit keamanan ketat, verifikasi kompatibilitas hosting. |
+| **FASE 12** | **Integrasi Platform Tambahan** | **SELESAI** | 10 Konektor lengkap: MySQL (Read-Only), WooCommerce, Shopify, Google Analytics 4, Search Console, YouTube, Meta Ads, TikTok, Google Sheets, Custom REST API, 17/17 test suites lulus. |
+| **FASE 13** | **Final Testing & Deployment Sim** | *Menunggu Persetujuan* | Pengujian end-to-end, simulasi update zero-data-loss, audit keamanan ketat, verifikasi kompatibilitas hosting. |
 
 ---
 
-## 2. Rincian Capaian FASE 11 (Automation & Monitoring)
-- [x] Sistem CLI Cron Runner Terpadu (`bin/cron/`):
-  - `bin/cron/cron_runner.php`: Master scheduler runner otomatis dengan deteksi menit berjalan.
-  - `bin/cron/sync.php`: Runner sinkronisasi otomatis konektor dengan evaluasi interval waktu dan deteksi anomali pasca-sinkronisasi.
-  - `bin/cron/process_queue.php`: Background queue worker runner dengan pembatasan waktu eksekusi ramah shared hosting.
-  - `bin/cron/backup.php`: Pencadangan basis data SQLite otomatis dengan retensi bergulir (*rolling retention*).
-  - Mekanisme penguncian berkas konkurensi (`flock`): Proteksi eksklusif non-blocking (`LOCK_EX | LOCK_NB`) untuk mencegah eksekusi tumpang tindih.
-- [x] Model Penjadwalan & Notifikasi:
-  - `ScheduledTask.php`: Evaluator ekspresi cron 5 bagian murni PHP, penanganan alias (`@daily`, `@hourly`, dll), kalkulasi waktu eksekusi berikutnya (`calculateNextRun`), pencegahan eksekusi duplikat dalam menit yang sama (`isDue`), dan seeding 6 tugas default platform.
-  - `Notification.php`: Manajemen notifikasi pengguna in-app, status baca/belum baca, tautan tindakan kontekstual, dan penyiaran peringatan sistem.
-- [x] Layanan Pemantauan & Pemeliharaan:
-  - `SystemMonitor.php`: Diagnostik komprehensif kesehatan sistem (SQLite `PRAGMA integrity_check`, mode WAL, busy timeout, kapasitas disk hosting, pemantauan antrean pending/running/stalled/failed, dan detak jantung cron), rotasi log otomatis (10 MB / 14 hari), dan pemangkasan cadangan SQLite bergulir (7 cadangan).
-  - `AlertService.php`: Evaluasi anomali dataset otomatis pasca-sinkronisasi, proteksi anti-fatigue 6 jam, dan deteksi kegagalan sinkronisasi berulang (3x berturut-turut).
-- [x] Pengontrol Web & REST API `AutomationController.php`:
-  - Web views: `schedules` (`/automation/schedules`), `tasks` (`/automation/tasks`), `health` (`/automation/health`), dan `notifications` (`/notifications`).
-  - Web Cron Endpoint: `GET /cron/run?token={TOKEN}` untuk hosting tanpa CLI cron.
-  - REST API Endpoints: `/api/v1/automation/health`, `/schedules`, `/jobs`, `/notifications`.
-- [x] Antarmuka Pengguna Otomasi & Pemantauan (`resources/views/automation/`):
-  - `schedules.php`: Visualisasi status cron, panduan salin-tempel crontab cPanel, dan tabel tugas.
-  - `tasks.php`: Dasbor antrean background dengan kartu bento dan badge status pekerjaan.
-  - `health.php`: Dasbor diagnostik kesehatan sistem dengan tombol cadangkan database dan rotasi log.
-  - `notifications.php`: Pusat notifikasi in-app dengan badge tingkat keparahan (*danger*, *warning*, *info*).
-- [x] Automated Test Suite Fase 11 (`tests/Unit/AutomationTest.php`):
-  - 10 skenario pengujian komprehensif lulus 100%.
-  - Seluruh 16/16 automated test suites AnaBot lulus 100%.
+## 2. Rincian Capaian FASE 12 (Integrasi Platform Tambahan)
+- [x] **Konektor Basis Data Eksternal (MySQL/MariaDB READ-ONLY)**:
+  - `MySQLConnector.php`: Penegakan kontrak mutlak read-only, pemblokiran kata kunci DDL/DML, sanitasi nama tabel/identifier, paginasi kursor primary key & offset.
+- [x] **Konektor E-Commerce Platform**:
+  - `WooCommerceConnector.php`: Autentikasi API Key Basic auth (`ck_...`, `cs_...`), dataset `orders`, `products`, `customers`, paginasi header `X-WP-TotalPages`.
+  - `ShopifyConnector.php`: Autentikasi OAuth2 (`X-Shopify-Access-Token`), domain validation, dataset `orders`, `products`, `customers`, paginasi cursor `since_id`.
+- [x] **Konektor Digital Marketing & Web Analytics**:
+  - `GoogleAnalyticsConnector.php`: GA4 Data API v1beta, sanitasi Property ID, pelaporan analitis `daily_traffic`, `traffic_sources`, `user_demographics`, `event_counts`.
+  - `SearchConsoleConnector.php`: Google Search Console API v3, kueri performa pencarian, kata kunci organik (`top_queries`), halaman landing (`top_pages`), dan per perangkat (`device_breakdown`).
+  - `YouTubeConnector.php`: YouTube Analytics API v2, performa channel (`channel_metrics`), video teratas (`video_engagement`), geografi penonton (`audience_geography`).
+  - `MetaAdsConnector.php`: Meta Ads Graph API v19.0, format ID `act_{id}`, insight kampanye (`campaign_insights`), set iklan (`ad_sets`), jangkauan akun harian (`ad_reach`).
+  - `TikTokConnector.php`: TikTok Marketing API v1.3, autentikasi header `Access-Token`, metrik kampanye (`campaign_metrics`), unit iklan (`ad_performance`), jangkauan (`daily_reach`).
+- [x] **Registrasi Seluruh 10 Concrete Drivers**:
+  - Pembaruan `config/connectors.php` dan `ConnectorManager.php` mengaitkan seluruh driver konkret dengan resolusi otomatis.
+- [x] **Antarmuka & Pengontrol Konektor Web Terintegrasi**:
+  - Form dinamis interaktif per jenis platform di `resources/views/connectors/create.php`.
+  - Penyimpanan kredensial terenkripsi AES-256-GCM komprehensif di `ConnectorController.php`.
+- [x] **Automated Test Suite Fase 12 (`tests/Unit/AdditionalConnectorsTest.php`)**:
+  - 10 skenario pengujian unit terisolasi lulus 100%.
+  - Integrasi runner master `tests/run_tests.php`: 17/17 test suites lulus 100%.
 
 ---
 
-## 3. Rencana Tugas untuk FASE 12 (Integrasi Platform Tambahan)
-Setelah pengguna memberikan persetujuan untuk FASE 12:
-1. Pembangunan **Konektor Basis Data Eksternal (MySQL/PostgreSQL READ-ONLY)**:
-   - Koneksi aman via PDO dengan query terisolasi dan skema pembacaan data waktu nyata.
-2. Pembangunan **Konektor REST API Kustom (Custom JSON/REST Endpoint)**:
-   - Antarmuka adaptor untuk REST API eksternal dengan pemetaan kolom JSON dan paging cursor.
-3. Pembangunan **Konektor Platform Digital Analytics & Ads (Meta Ads, Google Analytics 4, TikTok Ads)**:
-   - Integrasi metrik performa pemasaran digital berbasis API resmi.
-4. Pembangunan **Konektor E-Commerce (WooCommerce & Shopify)**:
-   - Penarikan metrik transaksi, pesanan, dan tren produk secara aman.
-5. Pembangunan **Automated Test Suite Fase 12**:
-   - Pengujian konektivitas driver baru dan verifikasi kontrak READ-ONLY.
-
+## 3. Rencana Tugas untuk FASE 13 (Final Testing & Deployment Sim)
+Setelah pengguna memberikan persetujuan untuk FASE 13:
+1. **End-to-End System Smoke Testing**:
+   - Pengujian terpadu alur lengkap: Autentikasi -> Koneksi Platform -> Sinkronisasi Data -> Deteksi Skema -> Eksplorasi Data -> Kalkulasi Statistik Deskriptif & Tren -> Grounded AI Analyst Briefing -> Deteksi Anomali & Prediksi Holt-Winters -> Ekspor Laporan PDF/XLSX -> Otomasi Scheduler & Monitoring.
+2. **Simulasi Pembaruan Zero-Data-Loss (Update Simulation)**:
+   - Pengujian simulasi proses rilis dan migrasi tambahan tanpa mengorbankan atau merusak data SQLite yang sudah ada.
+3. **Audit Keamanan Terakhir (Final Security Hardening)**:
+   - Verifikasi isolasi direktori privat (`storage/`, `bin/`), proteksi file traversal, anti-CSRF, sanitasi XSS, SSRF protection, dan enkripsi kredensial AES-256-GCM.
+4. **Verifikasi Kompatibilitas Shared Hosting**:
+   - Uji verifikasi batas memori PHP (128 MB), timeout 30 detik, zero-daemon, zero-docker, mode cPanel/shared hosting.
+5. **Dokumentasi Final & Panduan Penerapan (Production Deployment Guide)**.
