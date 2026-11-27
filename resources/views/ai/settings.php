@@ -146,7 +146,7 @@
                                 <?php endforeach; ?>
                                 <option value="__custom__">+ Ketik Model Lainnya...</option>
                             </select>
-                            <input type="text" id="custom-model-<?= $p['id'] ?>" placeholder="Ketik nama model (misal: gemini-2.5-pro)..." class="form-control" style="display: none; margin-top: 0.35rem; font-size: 0.8rem; width: 100%;">
+                            <input type="text" id="custom-model-<?= $p['id'] ?>" placeholder="Ketik nama model (misal: gemini-3.8-flash)..." class="form-control" style="display: none; margin-top: 0.35rem; font-size: 0.8rem; width: 100%;">
                         </div>
                         <div>
                             <label style="display: block; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.25rem;">Batas Token Bulanan</label>

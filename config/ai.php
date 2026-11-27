@@ -13,7 +13,7 @@ return [
         'gemini' => [
             'name' => 'Google Gemini',
             'api_endpoint' => 'https://generativelanguage.googleapis.com/v1beta',
-            'default_model' => 'gemini-2.5-flash',
+            'default_model' => 'gemini-3.8-flash',
         ],
         'openai' => [
             'name' => 'OpenAI',

@@ -84,6 +84,8 @@ class AIFrameworkTest
         assert($gemini instanceof AIProviderInterface, "Gemini must implement AIProviderInterface.");
         assert($gemini->getProviderCode() === 'gemini', "Gemini code must be 'gemini'.");
         assert($gemini->isConfigured() === true, "Gemini with key must be configured.");
+        assert($gemini->getDefaultModel() === 'gemini-3.8-flash', "Gemini default model must be gemini-3.8-flash.");
+        assert(in_array('gemini-3.8-flash', $gemini->getSupportedModels(), true), "Must support gemini-3.8-flash.");
         assert(in_array('gemini-1.5-pro', $gemini->getSupportedModels(), true), "Must support gemini-1.5-pro.");
 
         assert($openai instanceof AIProviderInterface, "OpenAI must implement AIProviderInterface.");

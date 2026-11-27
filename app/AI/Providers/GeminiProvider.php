@@ -16,9 +16,13 @@ class GeminiProvider extends BaseProvider
     public const CODE = 'gemini';
     public const NAME = 'Google Gemini';
     public const DEFAULT_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta';
-    public const DEFAULT_MODEL = 'gemini-2.5-flash';
+    public const DEFAULT_MODEL = 'gemini-3.8-flash';
 
     public const SUPPORTED_MODELS = [
+        'gemini-3.8-flash',
+        'gemini-3.8-pro',
+        'gemini-3.0-flash',
+        'gemini-3.0-pro',
         'gemini-2.5-flash',
         'gemini-2.5-pro',
         'gemini-2.0-flash',
@@ -116,7 +120,12 @@ class GeminiProvider extends BaseProvider
             ];
         }
 
-        $url = "{$this->apiEndpoint}/models/" . urlencode($model) . ":generateContent?key=" . urlencode($this->apiKey);
+        $cleanModel = (string) $model;
+        if (str_starts_with($cleanModel, 'models/')) {
+            $cleanModel = substr($cleanModel, 7);
+        }
+
+        $url = "{$this->apiEndpoint}/models/" . urlencode($cleanModel) . ":generateContent?key=" . urlencode($this->apiKey);
 
         try {
             $response = $this->httpClient->post($url, $payload, [

@@ -82,10 +82,15 @@ class AIManager
         $row = AIProvider::findByCode($code);
         $apiKey = '';
         $endpoint = '';
+        $defaultModel = '';
 
         if ($row) {
             $apiKey = AIProvider::getDecryptedApiKey((int) $row['id'], $this->encryption);
             $endpoint = (string) ($row['api_endpoint'] ?? '');
+            $defModelRow = AIModel::getDefault((int) $row['id']);
+            if ($defModelRow && !empty($defModelRow['model_name'])) {
+                $defaultModel = (string) $defModelRow['model_name'];
+            }
         }
 
         // Fallback to env or config if not saved in db
@@ -96,7 +101,9 @@ class AIManager
             $endpoint = $providerConfig['api_endpoint'];
         }
 
-        $defaultModel = $providerConfig['default_model'] ?? '';
+        if (empty($defaultModel) && !empty($providerConfig['default_model'])) {
+            $defaultModel = $providerConfig['default_model'];
+        }
 
         return match ($code) {
             'gemini' => new GeminiProvider($apiKey, $endpoint, $defaultModel, $this->httpClient, $this->logger),
@@ -380,7 +387,8 @@ class AIManager
             $currentDefault = AIModel::getDefault($providerId);
             $latestModel = $models[0] ?? '';
             if ($currentDefault && !empty($latestModel)) {
-                if ($code === 'gemini' && $currentDefault['model_name'] === 'gemini-1.5-pro') {
+                $legacyGemini = ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.5-flash'];
+                if ($code === 'gemini' && in_array($currentDefault['model_name'], $legacyGemini, true)) {
                     AIModel::setDefault($providerId, $latestModel);
                 } elseif ($code === 'claude' && $currentDefault['model_name'] === 'claude-3-5-sonnet-20241022') {
                     AIModel::setDefault($providerId, $latestModel);
