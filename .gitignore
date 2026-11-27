@@ -40,8 +40,8 @@ anabot_*.sqlite
 /anabot_data/
 /anabot_secrets/
 
-# Dependencies
-/vendor/
+# Dependencies (Keep Composer autoloader bundled for zero-dependency shared hosting)
+# /vendor/
 
 # OS and Editor files
 .DS_Store

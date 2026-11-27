@@ -6,12 +6,7 @@
     # Prevent direct access to sensitive files
     RewriteRule ^(\.env|\.git|composer\.(json|lock)|.*\.sqlite.*|.*\.key|.*\.log)$ - [F,L,NC]
 
-    # Redirect Trailing Slashes If Not A Folder...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
-
-    # Send Requests To Front Controller...
+    # Send Requests To Front Controller
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]

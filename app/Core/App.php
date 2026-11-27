@@ -58,6 +58,11 @@ class App
         $this->singleton('logger', fn() => new Logger());
         $this->singleton('encryption', fn() => new Encryption());
 
+        // Auto-initialize schema migrations on fresh installation if needed
+        if (config('app.env') !== 'testing') {
+            $this->ensureDatabaseInitialized();
+        }
+
         $this->booted = true;
         return $this;
     }
@@ -218,5 +223,43 @@ class App
             echo "<p>Terjadi kesalahan internal pada sistem. Detail error telah dicatat ke audit log.</p>";
         }
         exit(1);
+    }
+
+    private function ensureDatabaseInitialized(): void
+    {
+        try {
+            $db = Database::getInstance();
+            $pdo = $db->getPdo();
+
+            // Check if schema_migrations table exists
+            $checkTable = $pdo->query("SELECT name FROM sqlite_master WHERE type='table' AND name='schema_migrations'")->fetchColumn();
+            
+            if (!$checkTable) {
+                // Fresh installation: run migrations automatically
+                $runner = new MigrationRunner($db);
+                $runner->run();
+
+                // Check if users table is empty; if so, create initial administrator
+                $userCount = (int) ($db->queryOne("SELECT COUNT(*) as cnt FROM users")['cnt'] ?? 0);
+                if ($userCount === 0) {
+                    $defaultPassword = password_hash('admin12345', PASSWORD_BCRYPT, ['cost' => 12]);
+                    $db->execute(
+                        "INSERT INTO users (username, email, password_hash, status, created_at, updated_at) 
+                         VALUES (:u, :e, :p, 'active', :now, :now)",
+                        [
+                            ':u' => 'admin',
+                            ':e' => 'admin@anabot.local',
+                            ':p' => $defaultPassword,
+                            ':now' => date('c'),
+                        ]
+                    );
+                }
+            }
+        } catch (\Throwable $e) {
+            // Silently continue or log if error handler logger is available
+            if ($this->has('logger')) {
+                $this->get('logger')->warning('Auto-initialization notice: ' . $e->getMessage());
+            }
+        }
     }
 }

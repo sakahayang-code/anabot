@@ -49,7 +49,7 @@ class AuthController
             unset($_SESSION['flash_error']);
         }
 
-        $html .= '<form method="POST" action="/login">
+        $html .= '<form method="POST" action="' . e(url('/login')) . '">
             ' . csrf_field() . '
             <div class="form-group">
                 <label for="identifier">Username atau Email</label>

@@ -57,11 +57,15 @@ class Response
 
     public static function redirect(string $url, int $status = 302): void
     {
+        $target = (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) 
+            ? $url 
+            : (function_exists('url') ? url($url) : $url);
+
         if (!headers_sent()) {
             http_response_code($status);
-            header("Location: {$url}");
+            header("Location: {$target}");
         } else {
-            echo "<script>window.location.href=" . json_encode($url) . ";</script>";
+            echo "<script>window.location.href=" . json_encode($target) . ";</script>";
         }
         exit;
     }

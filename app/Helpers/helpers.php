@@ -194,8 +194,29 @@ if (!function_exists('redirect')) {
 if (!function_exists('url')) {
     function url(string $path = ''): string
     {
-        $appUrl = rtrim((string) env('APP_URL', 'http://localhost:8080'), '/');
-        return $path ? $appUrl . '/' . ltrim($path, '/') : $appUrl;
+        $appUrl = env('APP_URL');
+        if (empty($appUrl) || $appUrl === 'http://localhost:8080' || $appUrl === 'http://localhost:8000') {
+            $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443)
+                || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+            $scheme = $isHttps ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+
+            $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+            $baseDir = trim(str_replace('\\', '/', dirname($scriptName)), '/');
+            if (str_ends_with($baseDir, '/public')) {
+                $baseDir = substr($baseDir, 0, -7);
+            } elseif ($baseDir === 'public') {
+                $baseDir = '';
+            }
+
+            $appUrl = !empty($baseDir) ? "{$scheme}://{$host}/{$baseDir}" : "{$scheme}://{$host}";
+        } else {
+            $appUrl = rtrim((string) $appUrl, '/');
+        }
+
+        $cleanPath = ltrim($path, '/');
+        return $cleanPath !== '' ? $appUrl . '/' . $cleanPath : $appUrl;
     }
 }
 

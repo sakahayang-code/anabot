@@ -92,6 +92,23 @@ class Router
 
         $rawUri = $uri ?? $_SERVER['REQUEST_URI'] ?? '/';
         $path = parse_url($rawUri, PHP_URL_PATH) ?: '/';
+
+        // Auto-strip base directory if running in a subdirectory (e.g. /anabot or /anabot/public)
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        $scriptDir = trim(str_replace('\\', '/', dirname($scriptName)), '/');
+        if (!empty($scriptDir) && $scriptDir !== '.') {
+            if (str_starts_with($path, '/' . $scriptDir)) {
+                $path = substr($path, strlen('/' . $scriptDir));
+            } elseif (str_ends_with($scriptDir, '/public')) {
+                $parentDir = substr($scriptDir, 0, -7);
+                if (!empty($parentDir) && str_starts_with($path, '/' . $parentDir)) {
+                    $path = substr($path, strlen('/' . $parentDir));
+                }
+            } elseif ($scriptDir === 'public' && str_starts_with($path, '/public')) {
+                $path = substr($path, 7);
+            }
+        }
+
         $path = rtrim($path, '/');
         if (empty($path)) {
             $path = '/';

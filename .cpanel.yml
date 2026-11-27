@@ -3,6 +3,9 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home/mulw1713/public_html/anabot
     - /bin/mkdir -p $DEPLOYPATH
+    - /bin/mkdir -p $DEPLOYPATH/storage/database $DEPLOYPATH/storage/logs $DEPLOYPATH/storage/cache $DEPLOYPATH/storage/reports $DEPLOYPATH/storage/backups $DEPLOYPATH/storage/queue
     - /bin/cp -R * $DEPLOYPATH/
     - /bin/cp .htaccess $DEPLOYPATH/
+    - /bin/cp public/.htaccess $DEPLOYPATH/public/
     - /bin/chmod -R 775 $DEPLOYPATH/storage $DEPLOYPATH/database
+    - /bin/chmod 644 $DEPLOYPATH/.htaccess $DEPLOYPATH/public/.htaccess
