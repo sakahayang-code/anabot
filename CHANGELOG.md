@@ -4,6 +4,37 @@ Seluruh perubahan penting pada proyek AnaBot dicatat dalam dokumen ini. Format m
 
 ---
 
+## [0.7.0-dev] - 2026-11-27 (FASE 6 — Analytics Engine)
+
+### Ditambahkan (Added)
+- **Mesin Statistik & Analitik Deterministik PHP Native 8.4 (`app/Services/AnalyticsEngine.php`):**
+  - Perhitungan statistik deskriptif murni: Mean ($\bar{x}$), Median, Modus, Min, Max, Range, Sample Variance ($s^2$ dengan koreksi Bessel $n-1$), Standard Deviation ($s$), Kuartil ($Q1$, $Q3$), dan Interquartile Range ($IQR$).
+  - Agregasi rangkaian waktu multi-interval langsung via SQLite C-level speed (`strftime`) untuk interval Harian (`day`), Mingguan (`week`), Bulanan (`month`), dan Tahunan (`year`) tanpa pemborosan memori PHP.
+  - Perhitungan laju pertumbuhan periode ke periode (DoD, WoW, MoM, YoY) dengan penanganan aman terhadap basis nol ($0 \rightarrow X$) dan compound growth rate (CAGR / CMGR).
+  - Indikator perataan Simple Moving Average (SMA) dan Exponential Moving Average (EMA) dengan faktor pembobotan $\alpha = \frac{2}{window + 1}$.
+  - Deteksi arah tren otomatis berbasis Ordinary Least Squares (OLS) linear regression: Klasifikasi *Uptrend*, *Downtrend*, atau *Sideways* dengan slope ternormalisasi dan koefisien determinasi $R^2$.
+  - Perhitungan koefisien korelasi Pearson ($r \in [-1.0, 1.0]$) dengan penanganan varians nol, klasifikasi kekuatan korelasi 5 tingkat (*Sangat Kuat Positif*, *Moderat Positif*, *Lemah/Tidak Berkorelasi*, *Moderat Negatif*, *Sangat Kuat Negatif*), dan perangkingan pasangan variabel terkuat.
+  - Analisis kontribusi dimensi dan prinsip Pareto 80/20 (`breakdownByDimension`): Perhitungan persentase kontribusi per kategori dan identifikasi kategori penentu 80% volume metrik.
+  - Orkestrator analisis otomatis menyeluruh (`runFullAnalysis`) dan penyimpanan hasil perhitungan ke tabel SQLite `analysis_results`.
+- **Model Persistensi Hasil Analisis (`app/Models/AnalysisResult.php`):**
+  - Pengelolaan pencatatan hasil komputasi deterministik pada tabel `analysis_results` dengan garansi single-canonical record per dataset/metrik/tipe.
+- **Pengontrol Analitik & REST API (`app/Controllers/AnalyticsController.php`):**
+  - Web views: `trendsPage` (`/analytics`, `/analytics/trends`) dan `comparisonPage` (`/analytics/comparison`).
+  - REST API:
+    - `GET /api/v1/analytics/datasets/{id}/summary`: Statistik deskriptif seluruh kolom metrik.
+    - `GET /api/v1/analytics/datasets/{id}/timeseries`: Data rangkaian waktu dengan moving averages dan laju pertumbuhan.
+    - `GET /api/v1/analytics/datasets/{id}/correlation`: Matriks korelasi Pearson lengkap.
+    - `GET /api/v1/analytics/datasets/{id}/breakdown`: Rincian kontribusi dimensi dan Pareto.
+    - `POST /api/v1/analytics/datasets/{id}/recalculate`: Pemicu hitung ulang seluruh analitik dataset secara instan.
+- **Antarmuka Visualisasi Analitik Interaktif (`resources/views/analytics/`):**
+  - `trends.php`: Dasbor Tren & Pertumbuhan dengan pemilih dataset/metrik/interval, bento cards metrik deskriptif, grafik interaktif Chart.js (Aktual, SMA, EMA), dan tabel rincian pertumbuhan periode.
+  - `comparison.php`: Dasbor Komparasi & Korelasi dengan tabel matriks heatmap Pearson, peringkat hubungan variabel terkuat, diagram batang horizontal Chart.js, dan tabel kontribusi Pareto 80/20.
+- **Automated Test Suite Phase 6 (`tests/Unit/AnalyticsEngineTest.php`):**
+  - 9 skenario pengujian matematis ketat pada database SQLite terisolasi: statistik deskriptif pada distribusi angka terverifikasi, perhitungan pertumbuhan DoD/MoM/CAGR, moving averages SMA/EMA, regresi linear tren, korelasi Pearson ($r=1.0, r=-1.0, r\approx 0$), agregasi SQLite, matriks korelasi, analisis Pareto, dan persistensi `analysis_results`.
+  - **11/11 test suites automated runner lulus 100%**.
+
+---
+
 ## [0.6.0-dev] - 2026-11-27 (FASE 5 — Integrasi Pertama: Google Sheets)
 
 ### Ditambahkan (Added)

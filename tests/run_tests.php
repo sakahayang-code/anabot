@@ -29,11 +29,12 @@ use AnaBot\Tests\Unit\DashboardTest;
 use AnaBot\Tests\Unit\DataExplorerTest;
 use AnaBot\Tests\Unit\ConnectorFrameworkTest;
 use AnaBot\Tests\Unit\GoogleSheetsIntegrationTest;
+use AnaBot\Tests\Unit\AnalyticsEngineTest;
 
 $app = App::getInstance()->boot();
 
 echo "========================================================" . PHP_EOL;
-echo "  ANABOT AUTOMATED TEST SUITE (FASE 1, 2, 3, 4, & 5)" . PHP_EOL;
+echo "  ANABOT AUTOMATED TEST SUITE (FASE 1 - FASE 6)" . PHP_EOL;
 echo "  PHP: " . PHP_VERSION . " | Environment: TESTING" . PHP_EOL;
 echo "========================================================" . PHP_EOL . PHP_EOL;
 
@@ -48,6 +49,7 @@ $suites = [
     'Data Explorer & Memory-Safe Exporter' => new DataExplorerTest(),
     'Connector Framework & Sync Queue' => new ConnectorFrameworkTest(),
     'Google Sheets First Integration & Auto-Schema' => new GoogleSheetsIntegrationTest(),
+    'Analytics Engine & Statistical Calculation' => new AnalyticsEngineTest(),
 ];
 
 $passedSuites = 0;

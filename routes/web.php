@@ -88,30 +88,15 @@ $router->group(['middleware' => ['auth']], function (Router $auth) {
     $auth->post('/explorer/datasets/{id}/delete', [DataExplorerController::class, 'deleteDataset']);
     $auth->post('/explorer/columns/{id}/update', [DataExplorerController::class, 'updateColumn']);
 
-    // 5. Analytics (Roadmap Phase 6)
-    $auth->get('/analytics/trends', function () {
-        (new ModulePlaceholderController())->show(
-            'Analytics - Trends & Growth',
-            6,
-            'Mesin komputasi statistik deterministik: Total, Mean, Median, Min, Max, dan Growth Rate.',
-            [
-                ['title' => 'Growth Rate Calculation', 'desc' => 'Perhitungan persentase perubahan periode ke periode (MoM, YoY).'],
-                ['title' => 'Moving Averages', 'desc' => 'Simple & Exponential Moving Average untuk visualisasi tren data.']
-            ]
-        );
-    });
+    // 5. Analytics (Active Phase 6: Analytics Engine)
+    $auth->get('/analytics', [\AnaBot\Controllers\AnalyticsController::class, 'trendsPage']);
+    $auth->get('/analytics/trends', [\AnaBot\Controllers\AnalyticsController::class, 'trendsPage']);
+    $auth->get('/analytics/trends/{id}', [\AnaBot\Controllers\AnalyticsController::class, 'trendsPage']);
+    $auth->get('/analytics/dataset/{id}', [\AnaBot\Controllers\AnalyticsController::class, 'trendsPage']);
+    $auth->get('/analytics/comparison', [\AnaBot\Controllers\AnalyticsController::class, 'comparisonPage']);
+    $auth->get('/analytics/comparison/{id}', [\AnaBot\Controllers\AnalyticsController::class, 'comparisonPage']);
 
-    $auth->get('/analytics/comparison', function () {
-        (new ModulePlaceholderController())->show(
-            'Analytics - Platform Comparison',
-            6,
-            'Komparasi performa antarplatform dan korelasi antarvariabel metrik.',
-            [
-                ['title' => 'Korelasi Pearson', 'desc' => 'Mengidentifikasi hubungan linear antara dua variabel data.'],
-                ['title' => 'Benchmarking', 'desc' => 'Membandingkan kontribusi relatif tiap platform sumber data.']
-            ]
-        );
-    });
+    // Anomaly Detection (Scheduled for Phase 9)
 
     $auth->get('/analytics/anomalies', function () {
         (new ModulePlaceholderController())->show(

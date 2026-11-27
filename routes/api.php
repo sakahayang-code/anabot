@@ -63,5 +63,12 @@ $router->group(['prefix' => '/api/v1'], function (Router $api) {
         // Google Sheets Integration Endpoints (Phase 5)
         $authApi->get('/connectors/google-sheets/{id}/preview', [\AnaBot\Controllers\ConnectorController::class, 'googleSheetsPreviewApi']);
         $authApi->post('/connectors/google-sheets/{id}/import', [\AnaBot\Controllers\ConnectorController::class, 'googleSheetsImportApi']);
+
+        // Analytics Engine Endpoints (Phase 6)
+        $authApi->get('/analytics/datasets/{id}/summary', [\AnaBot\Controllers\AnalyticsController::class, 'summaryApi']);
+        $authApi->get('/analytics/datasets/{id}/timeseries', [\AnaBot\Controllers\AnalyticsController::class, 'timeseriesApi']);
+        $authApi->get('/analytics/datasets/{id}/correlation', [\AnaBot\Controllers\AnalyticsController::class, 'correlationApi']);
+        $authApi->get('/analytics/datasets/{id}/breakdown', [\AnaBot\Controllers\AnalyticsController::class, 'breakdownApi']);
+        $authApi->post('/analytics/datasets/{id}/recalculate', [\AnaBot\Controllers\AnalyticsController::class, 'recalculateApi']);
     });
 });
