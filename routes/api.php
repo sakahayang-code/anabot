@@ -23,5 +23,8 @@ $router->group(['prefix' => '/api/v1'], function (Router $api) {
         $authApi->post('/auth/logout', [AuthController::class, 'apiLogout']);
         $authApi->get('/auth/me', [AuthController::class, 'me']);
         $authApi->post('/auth/change-password', [AuthController::class, 'changePassword']);
+
+        // Dashboard Live Statistics
+        $authApi->get('/dashboard/stats', [\AnaBot\Controllers\DashboardController::class, 'statsApi']);
     });
 });

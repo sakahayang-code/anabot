@@ -1,7 +1,7 @@
 # Status Pengembangan AnaBot (Development Status)
 
 Terakhir diperbarui: 2026-11-27  
-Fase Saat Ini: **FASE 1 — Selesai (Menunggu Persetujuan Masuk FASE 2)**  
+Fase Saat Ini: **FASE 2 — Selesai (Menunggu Persetujuan Masuk FASE 3)**  
 Status Integritas Data: **Aman (Seluruh Pengujian Menggunakan Database Testing Terisolasi)**
 
 ---
@@ -12,8 +12,8 @@ Status Integritas Data: **Aman (Seluruh Pengujian Menggunakan Database Testing T
 | :---: | :--- | :---: | :--- |
 | **FASE 0** | **Pemeriksaan Lingkungan & Perencanaan** | **SELESAI** | Runtime PHP 8.4, arsitektur, skema DB, mitigasi risiko, skeleton direktori, dan dokumentasi lengkap. |
 | **FASE 1** | **Core System & Database Engine** | **SELESAI** | Bootstrap, Router, Database PDO SQLite, Auth, Security, Migration runner (`schema_migrations`), Logger, 6/6 test suites lulus. |
-| **FASE 2** | **Dashboard & UI Framework** | *Menunggu Persetujuan* | Layout modern SaaS, responsive desktop & mobile, dark/light mode, Chart components, placeholder DEMO jelas. |
-| **FASE 3** | **Database & Data Explorer** | *Belum Mulai* | Dataset manager, schema discovery, data records browser, search, filter, pagination, streaming CSV export. |
+| **FASE 2** | **Dashboard & UI Framework** | **SELESAI** | Layout modern SaaS, responsive desktop & mobile, dark/light mode, Chart.js lokal, 10 menu modul, bento KPI aktual, 7/7 test suites lulus. |
+| **FASE 3** | **Database & Data Explorer** | *Menunggu Persetujuan* | Dataset manager, schema discovery, data records browser, search, filter, pagination, streaming CSV export. |
 | **FASE 4** | **Connector Framework** | *Belum Mulai* | Interface konektor standar, Credential manager, AES-256-GCM, rate limiter, queue & sync log. |
 | **FASE 5** | **Integrasi Pertama (Google Sheets)** | *Belum Mulai* | OAuth/Service auth Google Sheets, test connection, normalisasi data, incremental sync via SQLite. |
 | **FASE 6** | **Analytics Engine (PHP)** | *Belum Mulai* | Mesin statistik deskriptif murni PHP, growth, korelasi, pergerakan tren, audit trail deterministik. |
@@ -27,29 +27,25 @@ Status Integritas Data: **Aman (Seluruh Pengujian Menggunakan Database Testing T
 
 ---
 
-## 2. Rincian Capaian FASE 1 (Core System)
-- [x] Inisialisasi bootstrap aplikasi, DI container, dan session manager di `app/Core/App.php`.
-- [x] Koneksi aman PDO SQLite di `app/Core/Database.php` (`foreign_keys = ON`, `busy_timeout = 5000`, `journal_mode = WAL` dengan fallback aman).
-- [x] Enkripsi dua arah kredensial API berbasis AES-256-GCM di `app/Core/Encryption.php`.
-- [x] Pencatatan aktivitas dengan penyensoran token/password otomatis di `app/Core/Logger.php`.
-- [x] Router cepat berbasis regex dengan grouping prefix, parameter dinamis, dan middleware di `app/Core/Router.php`.
-- [x] Autentikasi sesi single-user dengan hashing BCrypt, login throttling (max 5 percobaan / lockout 15 menit), dan audit logs di `app/Core/Auth.php`.
-- [x] Validasi input dan proteksi CSRF di `app/Core/Validator.php`.
-- [x] Standarisasi respons envelope JSON dan rendering view di `app/Core/Response.php`.
-- [x] Migration runner berurutan dengan pre-migration backup dan checksum SHA-256 di `app/Core/MigrationRunner.php`.
-- [x] Pembuatan 3 migrasi baseline yang meng-cover seluruh 28 tabel inti di `database/migrations/`.
-- [x] Pembuatan front controller di `public/index.php` dan proteksi di `public/.htaccess`.
-- [x] CLI migration tool `database/migrate.php` dan seeder akun `database/seeders/create_user.php`.
-- [x] Endpoint Web & REST API `/api/v1/health`, `/api/v1/auth/login`, `/api/v1/auth/logout`, `/api/v1/auth/me`, `/api/v1/auth/change-password`.
-- [x] Pengujian otomatis 6/6 test suites lulus 100% di `tests/run_tests.php`.
+## 2. Rincian Capaian FASE 2 (Dashboard & UI Framework)
+- [x] Sistem desain SaaS modern dengan palet Cobalt Blue & Deep Navy di `public/assets/css/anabot.css`.
+- [x] Pengatur tema Dark Mode dan Light Mode dengan penyimpanan preferensi di `localStorage` (`public/assets/js/anabot.js`).
+- [x] Bundling library Chart.js mandiri secara lokal di `public/assets/js/chart.min.js` (bebas dependensi CDN eksternal).
+- [x] Master layout responsif (`resources/views/layouts/main.php`), header interaktif (`header.php`), dan sidebar navigasi 10 modul (`sidebar.php`).
+- [x] Responsive mobile experience dengan tombol hamburger drawer dan backdrop sentuh overlay.
+- [x] Bento Grid 8 kartu metrik KPI dari database SQLite aktual di `resources/views/dashboard/index.php`.
+- [x] Grafik pertumbuhan volume baris data (Area Chart) dan donat distribusi token AI (Donut Chart).
+- [x] Kepatuhan pelabelan transparan: data aktual ditandai `DATA AKTUAL` dan preview visual saat data kosong ditandai `DEMO` (Rule 1.12 & 1.13).
+- [x] Controller ringkasan statistik `app/Controllers/DashboardController.php` dan endpoint API `GET /api/v1/dashboard/stats`.
+- [x] Pengendali rute placeholder modul `app/Controllers/ModulePlaceholderController.php` untuk seluruh navigasi di sidebar tanpa error 404.
+- [x] Pengujian unit otomatis `tests/Unit/DashboardTest.php` (7/7 test suites lulus 100%).
 
 ---
 
-## 3. Rencana Tugas untuk FASE 2 (Dashboard & UI Framework)
-Setelah pengguna memberikan persetujuan untuk FASE 2:
-1. Pembangunan master layout responsif modern SaaS (`resources/views/layouts/main.php`).
-2. Pembangunan sidebar navigasi hierarkis (Dashboard, AI Analyst, Data Sources, Data Explorer, Analytics, Predictions, Reports, Automation, AI Management, Settings).
-3. Pembangunan header interaktif (Profil single-user, status konektivitas, dark/light theme switcher).
-4. Pembangunan kartu metrik ringkasan (Total platform terhubung, total dataset, total records, status sync terakhir, estimasi biaya AI).
-5. Integrasi grafik visual interaktif berbasis library JavaScript modern (ringan & cepat tanpa dependensi berat).
-6. Penandaan transparan komponen data demo dengan badge `DEMO` sesuai aturan 1.12 dan 1.13.
+## 3. Rencana Tugas untuk FASE 3 (Database & Data Explorer)
+Setelah pengguna memberikan persetujuan untuk FASE 3:
+1. Pembangunan antarmuka **Data Explorer** (`/explorer/datasets`, `/explorer/records`, `/explorer/schema`).
+2. Implementasi **Dataset Manager**: Menampilkan daftar dataset yang tersimpan, jumlah baris, rentang waktu, dan tanggal sinkronisasi terakhir.
+3. Implementasi **Schema Discovery**: Membaca kolom dataset secara dinamis, menentukan tipe data (TEXT, INTEGER, NUMERIC, DATETIME), serta menetapkan peran metrik atau dimensi.
+4. Implementasi **Records Browser**: Menampilkan data baris ternormalisasi dengan fitur pencarian teks, filter kolom, sorting naik/turun, dan pagination cepat SQLite (LIMIT/OFFSET).
+5. Implementasi **Streaming CSV Exporter**: Ekspor dataset ke format CSV menggunakan generator PHP (`yield`) untuk mencegah penggunaan memori berlebih pada shared hosting.

@@ -4,6 +4,36 @@ Seluruh perubahan penting pada proyek AnaBot dicatat dalam dokumen ini. Format m
 
 ---
 
+## [0.3.0-dev] - 2026-11-27 (FASE 2 — Dashboard & UI Framework)
+
+### Ditambahkan (Added)
+- **Design System SaaS Modern (`public/assets/css/anabot.css`):**
+  - Palet warna profesional Cobalt Blue (`#0284c7`), Deep Navy (`#0b1120`), dan Cool Gray (`#f8fafc`).
+  - Dukungan native **Dark Mode & Light Mode** dengan variabel CSS dinamis.
+  - Bento KPI Grid cards dengan hover micro-interactions dan layout responsif desktop & mobile.
+  - Tabular figures (`font-variant-numeric: tabular-nums`) untuk konsistensi angka dan statistik.
+- **Frontend Interaktif & Offline Chart Bundle (`public/assets/js/anabot.js` & `chart.min.js`):**
+  - Penyimpan preferensi tema otomatis ke `localStorage` (`anabot_theme`).
+  - Mobile navigation drawer dengan slide-in menu dan backdrop touch overlay.
+  - Bundle lokal mandiri Chart.js 4.4 (202 KB) di `public/assets/js/chart.min.js` tanpa ketergantungan CDN eksternal.
+- **Master Layout & View Templates (`resources/views/layouts/`):**
+  - Master layout `layouts/main.php` dengan deklarasi meta viewport, footer, dan aset lokal.
+  - Sidebar hierarkis `layouts/sidebar.php` mencakup seluruh 10 modul Bagian 10 dengan indikator active route.
+  - Top header `layouts/header.php` dengan tombol dark/light switcher, profil single-user, dan tombol logout aman ber-CSRF.
+- **Dashboard Eksekutif (`resources/views/dashboard/index.php` & `app/Controllers/DashboardController.php`):**
+  - 8 Kartu metrik KPI terhubung langsung ke SQLite: Platform terhubung, Datasets, Records, Sinkronisasi terakhir, Sesi analisis, Total laporan, Token AI, dan Estimasi biaya AI.
+  - Grafik pertumbuhan time-series record data (Area Chart) dan donat distribusi token AI (Donut Chart).
+  - Kepatuhan Aturan 1.12 & 1.13: Data aktual diberi label `DATA AKTUAL`, dan data demo/preview diberi badge transparan `DEMO`.
+  - Tabel ringkasan platform terhubung dan pintasan aksi cepat ke modul koneksi.
+- **Roadmap Placeholder Controller (`app/Controllers/ModulePlaceholderController.php`):**
+  - Seluruh rute modul di sidebar terhubung ke halaman informasi fase berikutnya tanpa menghasilkan error 404 (Rules 1.12).
+- **REST API Endpoint (`GET /api/v1/dashboard/stats`):**
+  - Endpoint JSON terautentikasi untuk data real-time dashboard.
+- **Automated Test Suite (`tests/Unit/DashboardTest.php`):**
+  - Pengujian agregasi metrik, validasi aset lokal, dan pengujian bendera transparan `isGrowthDataDemo` (7/7 test suites lulus 100%).
+
+---
+
 ## [0.2.0-dev] - 2026-11-27 (FASE 1 — Core System)
 
 ### Ditambahkan (Added)
