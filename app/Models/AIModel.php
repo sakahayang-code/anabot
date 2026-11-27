@@ -45,10 +45,19 @@ class AIModel
     {
         $db = Database::getInstance();
         $db->execute("UPDATE ai_models SET is_default = 0 WHERE provider_id = :pid", [':pid' => $providerId]);
-        $affected = $db->execute(
-            "UPDATE ai_models SET is_default = 1 WHERE provider_id = :pid AND model_name = :m",
-            [':pid' => $providerId, ':m' => $modelName]
+
+        $now = date('c');
+        $db->execute(
+            "INSERT INTO ai_models (provider_id, model_name, display_name, is_default, created_at)
+             VALUES (:pid, :m, :disp, 1, :now)
+             ON CONFLICT(provider_id, model_name) DO UPDATE SET is_default = 1",
+            [
+                ':pid' => $providerId,
+                ':m' => $modelName,
+                ':disp' => ucfirst($modelName),
+                ':now' => $now,
+            ]
         );
-        return $affected > 0;
+        return true;
     }
 }

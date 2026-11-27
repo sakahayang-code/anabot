@@ -375,6 +375,17 @@ class AIManager
                     ]
                 );
             }
+
+            // Automatically upgrade legacy default model to newest flagship model if unchanged
+            $currentDefault = AIModel::getDefault($providerId);
+            $latestModel = $models[0] ?? '';
+            if ($currentDefault && !empty($latestModel)) {
+                if ($code === 'gemini' && $currentDefault['model_name'] === 'gemini-1.5-pro') {
+                    AIModel::setDefault($providerId, $latestModel);
+                } elseif ($code === 'claude' && $currentDefault['model_name'] === 'claude-3-5-sonnet-20241022') {
+                    AIModel::setDefault($providerId, $latestModel);
+                }
+            }
         }
     }
 

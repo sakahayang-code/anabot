@@ -13,7 +13,7 @@ return [
         'gemini' => [
             'name' => 'Google Gemini',
             'api_endpoint' => 'https://generativelanguage.googleapis.com/v1beta',
-            'default_model' => 'gemini-1.5-pro',
+            'default_model' => 'gemini-2.5-flash',
         ],
         'openai' => [
             'name' => 'OpenAI',
@@ -23,7 +23,7 @@ return [
         'claude' => [
             'name' => 'Anthropic Claude',
             'api_endpoint' => 'https://api.anthropic.com/v1',
-            'default_model' => 'claude-3-5-sonnet-20241022',
+            'default_model' => 'claude-3-7-sonnet-20250219',
         ],
         'compatible' => [
             'name' => 'OpenAI Compatible',

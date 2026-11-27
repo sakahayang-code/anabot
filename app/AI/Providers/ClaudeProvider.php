@@ -16,10 +16,11 @@ class ClaudeProvider extends BaseProvider
     public const CODE = 'claude';
     public const NAME = 'Anthropic Claude';
     public const DEFAULT_ENDPOINT = 'https://api.anthropic.com/v1';
-    public const DEFAULT_MODEL = 'claude-3-5-sonnet-20241022';
+    public const DEFAULT_MODEL = 'claude-3-7-sonnet-20250219';
     public const ANTHROPIC_VERSION = '2023-06-01';
 
     public const SUPPORTED_MODELS = [
+        'claude-3-7-sonnet-20250219',
         'claude-3-5-sonnet-20241022',
         'claude-3-5-haiku-20241022',
         'claude-3-opus-20240229',

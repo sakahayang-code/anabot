@@ -138,13 +138,15 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.75rem;">
                         <div>
                             <label style="display: block; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.25rem;">Model Default</label>
-                            <select name="default_model" class="form-control" style="font-size: 0.8rem; width: 100%;">
+                            <select name="default_model" class="form-control" style="font-size: 0.8rem; width: 100%;" onchange="toggleCustomModel(this, 'custom-model-<?= $p['id'] ?>')">
                                 <?php foreach ($models as $m): ?>
                                     <option value="<?= e($m['model_name']) ?>" <?= !empty($m['is_default']) ? 'selected' : '' ?>>
                                         <?= e($m['model_name']) ?>
                                     </option>
                                 <?php endforeach; ?>
+                                <option value="__custom__">+ Ketik Model Lainnya...</option>
                             </select>
+                            <input type="text" id="custom-model-<?= $p['id'] ?>" placeholder="Ketik nama model (misal: gemini-2.5-pro)..." class="form-control" style="display: none; margin-top: 0.35rem; font-size: 0.8rem; width: 100%;">
                         </div>
                         <div>
                             <label style="display: block; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.25rem;">Batas Token Bulanan</label>
@@ -232,15 +234,32 @@
 </div>
 
 <script>
+function toggleCustomModel(selectElem, customInputId) {
+    const input = document.getElementById(customInputId);
+    if (!input) return;
+    if (selectElem.value === '__custom__') {
+        input.style.display = 'block';
+        input.focus();
+    } else {
+        input.style.display = 'none';
+    }
+}
+
 async function saveProvider(event, id) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
 
+    let selectedModel = formData.get('default_model');
+    const customInput = document.getElementById('custom-model-' + id);
+    if (selectedModel === '__custom__' && customInput && customInput.value.trim() !== '') {
+        selectedModel = customInput.value.trim();
+    }
+
     const payload = {
         api_key: formData.get('api_key'),
         api_endpoint: formData.get('api_endpoint') || undefined,
-        default_model: formData.get('default_model'),
+        default_model: selectedModel,
         monthly_token_budget: parseInt(formData.get('monthly_token_budget') || '0', 10),
         is_active: formData.get('is_active') === '1',
         is_primary: formData.get('provider_role') === 'primary',

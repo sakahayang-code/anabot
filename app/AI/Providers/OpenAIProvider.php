@@ -21,6 +21,10 @@ class OpenAIProvider extends BaseProvider
     public const SUPPORTED_MODELS = [
         'gpt-4o',
         'gpt-4o-mini',
+        'gpt-4.5-preview',
+        'o1',
+        'o1-mini',
+        'o3-mini',
         'gpt-4-turbo',
     ];
 
