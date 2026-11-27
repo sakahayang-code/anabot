@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 use AnaBot\Controllers\AuthController;
 use AnaBot\Controllers\DashboardController;
+use AnaBot\Controllers\DataExplorerController;
 use AnaBot\Controllers\HomeController;
 use AnaBot\Controllers\ModulePlaceholderController;
 use AnaBot\Core\Router;
@@ -100,42 +101,16 @@ $router->group(['middleware' => ['auth']], function (Router $auth) {
         );
     });
 
-    // 4. Data Explorer (Roadmap Phase 3)
-    $auth->get('/explorer/datasets', function () {
-        (new ModulePlaceholderController())->show(
-            'Data Explorer - Datasets',
-            3,
-            'Pusat pengelolaan dataset lokal yang telah dinormalisasi ke SQLite.',
-            [
-                ['title' => 'Tinjauan Metadata', 'desc' => 'Jumlah baris, rentang tanggal, dan waktu sinkronisasi terakhir.'],
-                ['title' => 'Ekspor CSV', 'desc' => 'Pengunduhan data dengan streaming generator hemat memori.']
-            ]
-        );
-    });
-
-    $auth->get('/explorer/records', function () {
-        (new ModulePlaceholderController())->show(
-            'Data Explorer - Records Browser',
-            3,
-            'Tabel penelusuran baris data dengan pagination, pencarian cepat, filter kolom, dan pengurutan.',
-            [
-                ['title' => 'Pagination SQLite', 'desc' => 'Pembacaan data bertahap tanpa membebani memori PHP.'],
-                ['title' => 'Pencarian & Filter', 'desc' => 'Filter berdasarkan rentang waktu atau nilai metrik tertentu.']
-            ]
-        );
-    });
-
-    $auth->get('/explorer/schema', function () {
-        (new ModulePlaceholderController())->show(
-            'Data Explorer - Schema Discovery',
-            3,
-            'Inspeksi struktur skema kolom, klasifikasi dimensi, dan penetapan metrik analisis.',
-            [
-                ['title' => 'Deteksi Tipe Otomatis', 'desc' => 'Klasifikasi TEXT, INTEGER, NUMERIC, dan DATETIME.'],
-                ['title' => 'Penandaan Kolom Utama', 'desc' => 'Penetapan kolom tanggal utama untuk analisis time-series.']
-            ]
-        );
-    });
+    // 4. Data Explorer (Active Phase 3)
+    $auth->get('/explorer/datasets', [DataExplorerController::class, 'datasets']);
+    $auth->get('/explorer/datasets/{id}', [DataExplorerController::class, 'records']);
+    $auth->get('/explorer/datasets/{id}/records', [DataExplorerController::class, 'records']);
+    $auth->get('/explorer/records', [DataExplorerController::class, 'records']);
+    $auth->get('/explorer/datasets/{id}/schema', [DataExplorerController::class, 'schema']);
+    $auth->get('/explorer/schema', [DataExplorerController::class, 'schema']);
+    $auth->get('/explorer/datasets/{id}/export', [DataExplorerController::class, 'exportCsv']);
+    $auth->post('/explorer/datasets/{id}/delete', [DataExplorerController::class, 'deleteDataset']);
+    $auth->post('/explorer/columns/{id}/update', [DataExplorerController::class, 'updateColumn']);
 
     // 5. Analytics (Roadmap Phase 6)
     $auth->get('/analytics/trends', function () {

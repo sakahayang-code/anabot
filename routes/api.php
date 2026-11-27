@@ -26,5 +26,13 @@ $router->group(['prefix' => '/api/v1'], function (Router $api) {
 
         // Dashboard Live Statistics
         $authApi->get('/dashboard/stats', [\AnaBot\Controllers\DashboardController::class, 'statsApi']);
+
+        // Data Explorer Endpoints (Phase 3)
+        $authApi->get('/data/overview', [\AnaBot\Controllers\DataExplorerController::class, 'apiOverview']);
+        $authApi->get('/datasets', [\AnaBot\Controllers\DataExplorerController::class, 'apiListDatasets']);
+        $authApi->get('/datasets/{id}', [\AnaBot\Controllers\DataExplorerController::class, 'apiGetDataset']);
+        $authApi->get('/datasets/{id}/records', [\AnaBot\Controllers\DataExplorerController::class, 'apiGetRecords']);
+        $authApi->get('/datasets/{id}/schema', [\AnaBot\Controllers\DataExplorerController::class, 'apiGetSchema']);
+        $authApi->get('/datasets/{id}/export', [\AnaBot\Controllers\DataExplorerController::class, 'exportCsv']);
     });
 });

@@ -4,6 +4,31 @@ Seluruh perubahan penting pada proyek AnaBot dicatat dalam dokumen ini. Format m
 
 ---
 
+## [0.4.0-dev] - 2026-11-27 (FASE 3 — Database & Data Explorer)
+
+### Ditambahkan (Added)
+- **Model Akses Data SQLite (`app/Models/`):**
+  - `Dataset.php`: Query dataset dengan pagination, metadata relasi data source & konektor, serta cascade deletion aman.
+  - `DatasetColumn.php`: Pengambilan struktur kolom per dataset dan pembaruan metadata (tipe data, primary date, metric, dimension).
+  - `DataRecord.php`: Pembacaan data baris ternormalisasi dengan pagination cepat SQLite (LIMIT/OFFSET), pencarian teks bebas, penyaringan JSON (`json_extract`), pengurutan dinamis (ASC/DESC), dan cursor export.
+- **Service Data Explorer (`app/Services/DataExplorerService.php`):**
+  - Logika bisnis sentral pengelolaan dataset, detail skema, paginasi baris data, dan penghapusan lokal aman.
+  - **Streaming CSV Generator:** Generator PHP berbasis `yield` (`streamCsvExport`) yang membaca baris demi baris via cursor PDO langsung ke output buffer tanpa membebani memori PHP (Memory-Safe untuk Shared Hosting).
+  - Kepatuhan PHP 8.4: Penanganan parameter eksplisit `$escape` pada fungsi `fputcsv()`.
+- **Controller Data Explorer (`app/Controllers/DataExplorerController.php`):**
+  - Web handlers: `datasets()`, `records()`, `schema()`, `exportCsv()`, `updateColumn()`, `deleteDataset()`.
+  - REST API handlers: `GET /api/v1/data/overview`, `GET /api/v1/datasets`, `GET /api/v1/datasets/{id}`, `GET /api/v1/datasets/{id}/records`, `GET /api/v1/datasets/{id}/schema`, `GET /api/v1/datasets/{id}/export`.
+- **Antarmuka Data Explorer (`resources/views/explorer/`):**
+  - `datasets.php`: Tabel ringkasan dataset, jumlah baris, rentang tanggal data, dan aksi cepat.
+  - `records.php`: Browser baris data responsif dengan dropdown pemilih dataset, bilah pencarian teks bebas, filter kolom, kontrol sorting, dan paginasi interaktif.
+  - `schema.php`: Inspeksi tipe kolom (TEXT, INTEGER, NUMERIC, DATETIME, BOOLEAN), penandaan tanggal linimasa (Primary Date), serta klasifikasi Metrik vs Dimensi untuk kebutuhan analitik.
+- **CLI Development Seeder (`database/seeders/seed_sample_dataset.php`):**
+  - Seeder data realistis 75 baris transaksi penjualan multi-kategori dengan 6 kolom terstruktur.
+- **Automated Test Suite (`tests/Unit/DataExplorerTest.php`):**
+  - Pengujian komprehensif paginasi SQLite, text search, filter kolom JSON, sorting dinamis, pembaruan metadata skema, streaming CSV export, overview stats, dan cascade deletion (8/8 test suites lulus 100%).
+
+---
+
 ## [0.3.0-dev] - 2026-11-27 (FASE 2 — Dashboard & UI Framework)
 
 ### Ditambahkan (Added)

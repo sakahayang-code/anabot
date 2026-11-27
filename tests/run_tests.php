@@ -26,11 +26,12 @@ use AnaBot\Tests\Unit\RouterTest;
 use AnaBot\Tests\Unit\MigrationTest;
 use AnaBot\Tests\Unit\AuthTest;
 use AnaBot\Tests\Unit\DashboardTest;
+use AnaBot\Tests\Unit\DataExplorerTest;
 
 $app = App::getInstance()->boot();
 
 echo "========================================================" . PHP_EOL;
-echo "  ANABOT AUTOMATED TEST SUITE (FASE 1 & 2)" . PHP_EOL;
+echo "  ANABOT AUTOMATED TEST SUITE (FASE 1, 2, & 3)" . PHP_EOL;
 echo "  PHP: " . PHP_VERSION . " | Environment: TESTING" . PHP_EOL;
 echo "========================================================" . PHP_EOL . PHP_EOL;
 
@@ -42,6 +43,7 @@ $suites = [
     'Migration Runner & Schema' => new MigrationTest(),
     'Authentication & Security' => new AuthTest(),
     'Dashboard Engine & UI Assets' => new DashboardTest(),
+    'Data Explorer & Memory-Safe Exporter' => new DataExplorerTest(),
 ];
 
 $passedSuites = 0;
