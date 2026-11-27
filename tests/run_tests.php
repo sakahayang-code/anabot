@@ -36,11 +36,13 @@ use AnaBot\Tests\Unit\PredictiveAnalyticsTest;
 use AnaBot\Tests\Unit\ReportEngineTest;
 use AnaBot\Tests\Unit\AutomationTest;
 use AnaBot\Tests\Unit\AdditionalConnectorsTest;
+use AnaBot\Tests\Unit\ZeroDataLossMigrationTest;
+use AnaBot\Tests\Unit\EndToEndSystemTest;
 
 $app = App::getInstance()->boot();
 
 echo "========================================================" . PHP_EOL;
-echo "  ANABOT AUTOMATED TEST SUITE (FASE 1 - FASE 12)" . PHP_EOL;
+echo "  ANABOT AUTOMATED TEST SUITE (FASE 1 - FASE 13)" . PHP_EOL;
 echo "  PHP: " . PHP_VERSION . " | Environment: TESTING" . PHP_EOL;
 echo "========================================================" . PHP_EOL . PHP_EOL;
 
@@ -62,6 +64,8 @@ $suites = [
     'Report Engine (Multi-Format & Secure Storage)' => new ReportEngineTest(),
     'Automation, Scheduler & System Monitoring' => new AutomationTest(),
     'Additional Platform Connectors (FASE 12)' => new AdditionalConnectorsTest(),
+    'Zero-Data-Loss Migration & Update Simulation' => new ZeroDataLossMigrationTest(),
+    'End-to-End System Integration Smoke Test' => new EndToEndSystemTest(),
 ];
 
 $passedSuites = 0;
