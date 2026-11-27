@@ -167,6 +167,26 @@ class Database
         }
     }
 
+    public function beginTransaction(): bool
+    {
+        return $this->getPdo()->beginTransaction();
+    }
+
+    public function commit(): bool
+    {
+        return $this->getPdo()->commit();
+    }
+
+    public function rollBack(): bool
+    {
+        return $this->getPdo()->rollBack();
+    }
+
+    public function inTransaction(): bool
+    {
+        return $this->getPdo()->inTransaction();
+    }
+
     public function integrityCheck(): bool
     {
         $result = $this->getPdo()->query('PRAGMA integrity_check;')->fetchColumn();

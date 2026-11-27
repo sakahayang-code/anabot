@@ -71,6 +71,8 @@ $router->group(['middleware' => ['auth']], function (Router $auth) {
     $auth->get('/connectors/oauth/authorize/{code}', [\AnaBot\Controllers\ConnectorController::class, 'oauthAuthorize']);
     $auth->get('/connectors/oauth/callback', [\AnaBot\Controllers\ConnectorController::class, 'oauthCallback']);
     $auth->post('/connectors', [\AnaBot\Controllers\ConnectorController::class, 'store']);
+    $auth->get('/connectors/{id}/google-sheets', [\AnaBot\Controllers\ConnectorController::class, 'googleSheetsImportPage']);
+    $auth->get('/connectors/{id}/sheets', [\AnaBot\Controllers\ConnectorController::class, 'googleSheetsImportPage']);
     $auth->get('/connectors/{id}', [\AnaBot\Controllers\ConnectorController::class, 'show']);
     $auth->post('/connectors/{id}/settings', [\AnaBot\Controllers\ConnectorController::class, 'updateSettings']);
     $auth->post('/connectors/{id}/disconnect', [\AnaBot\Controllers\ConnectorController::class, 'disconnect']);

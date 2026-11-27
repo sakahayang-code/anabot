@@ -4,6 +4,43 @@ Seluruh perubahan penting pada proyek AnaBot dicatat dalam dokumen ini. Format m
 
 ---
 
+## [0.6.0-dev] - 2026-11-27 (FASE 5 — Integrasi Pertama: Google Sheets)
+
+### Ditambahkan (Added)
+- **Engine Normalisasi & Inferensi Skema Data (`app/Services/DataNormalizer.php`):**
+  - Sanitasi nama kolom header otomatis ke snake_case (`sanitizeColumnName`) yang aman untuk SQLite dan JSON path extraction.
+  - Inferensi tipe data cerdas (`inferColumnType`): `DATETIME`, `INTEGER`, `NUMERIC`, `BOOLEAN`, dan `TEXT` dengan analisis sampel multi-baris.
+  - Pembersihan dan normalisasi mata uang & persentase (`cleanCurrency`): Mengubah format `Rp 1.500.000`, `$1,250.50`, atau `15%` menjadi nilai numerik murni.
+  - Normalisasi tanggal ke format ISO-8601 (`normalizeDate`): Mendukung format `YYYY-MM-DD`, `DD/MM/YYYY`, `DD-MM-YYYY`, dan timestamp.
+  - Klasifikasi peran kolom cerdas (`classifyColumnRole`): Menentukan `is_primary_date` (kolom tanggal utama), `is_metric` (nilai terukur/kuantitatif), dan `is_dimension` (atribut kategorikal/kualitatif).
+- **Pembantu Autentikasi Google (`app/Connectors/GoogleSheets/GoogleAuthHelper.php`):**
+  - Ekstraksi Spreadsheet ID cerdas (`extractSpreadsheetId`) dari berbagai format URL (URL edit browser, URL publikasi web, atau ID 44-karakter langsung).
+  - Pembuatan Assertion JWT Google Service Account mandiri dengan algoritma **RS256** menggunakan ekstensi native PHP OpenSSL (`openssl_sign` dengan `OPENSSL_ALGO_SHA256`) — zero dependency terhadap library eksternal.
+  - Pertukaran token akses Google OAuth 2.0 (`exchangeJwtForAccessToken`) langsung ke endpoint resmi `https://oauth2.googleapis.com/token`.
+- **Pengembangan Driver Google Sheets API v4 (`app/Connectors/GoogleSheets/GoogleSheetsConnector.php`):**
+  - Penegakan mutlak izin **READ-ONLY** dengan scope tunggal `https://www.googleapis.com/auth/spreadsheets.readonly`.
+  - Fitur `getAvailableDatasets()` untuk mengambil seluruh daftar tab sheet dalam file spreadsheet via endpoint `sheets.get`.
+  - Fitur `previewSheet()` untuk pratinjau instan 5 baris pertama spreadsheet dengan deteksi baris header dan inferensi skema kolom langsung.
+  - Fitur `fetchData()` dengan paginasi range berbasis row-offset (`Sheet1!A{start}:ZZ{end}`) dan filter otomatis baris kosong (`isRowEmpty`).
+- **Orkestrator Impor Atomik (`app/Services/GoogleSheetsImporter.php`):**
+  - Pipeline impor atomik menyeluruh dari Google Sheets langsung ke tabel SQLite internal AnaBot (`data_sources`, `datasets`, `dataset_columns`, `data_records`, dan `sync_jobs`).
+  - Pencegahan duplikasi data mutlak (idempotent upsert) menggunakan komposit `external_id = "{sheetName}_{rowNumber}"` dan SHA-256 hash.
+  - Perhitungan statistik ringkasan dataset seketika (`record_count`, rentang tanggal data `first_record_at` dan `latest_record_at`).
+  - Integrasi pencatatan tugas sinkronisasi otomatis ke `sync_jobs` dan pembaruan cursor ke `sync_cursors`.
+- **Studio Impor Google Sheets Interaktif (`resources/views/connectors/google_sheets/import.php`):**
+  - Antarmuka web ramah pengguna untuk pemilihan tab sheet secara dinamis.
+  - Pratinjau interaktif tabel data aktual sebelum konfirmasi impor.
+  - Penanda badge peran kolom (Primary Date, Metric, Dimension) dengan pemilihan tipe data yang transparan.
+  - Indikator status progres sinkronisasi real-time.
+- **Rute Web & API Endpoint Google Sheets (`routes/web.php` & `routes/api.php`):**
+  - Rute web: `GET /connectors/{id}/google-sheets` dan alias `GET /connectors/{id}/sheets`.
+  - API endpoint: `GET /api/v1/connectors/google-sheets/{id}/preview` dan `POST /api/v1/connectors/google-sheets/{id}/import`.
+- **Automated Test Suite Google Sheets (`tests/Unit/GoogleSheetsIntegrationTest.php`):**
+  - 8 skenario pengujian komprehensif: ekstraksi URL/ID spreadsheet, penandatanganan OpenSSL RS256 JWT, inferensi tipe data, pembersihan mata uang/tanggal, klasifikasi peran kolom, pratinjau live dengan filter baris kosong, impor atomik end-to-end ke SQLite, dan penjaminan idempotensi anti-duplikasi baris.
+  - **10/10 test suites automated runner lulus 100%**.
+
+---
+
 ## [0.5.0-dev] - 2026-11-27 (FASE 4 — Connector Framework)
 
 ### Ditambahkan (Added)

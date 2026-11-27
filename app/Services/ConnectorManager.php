@@ -267,6 +267,7 @@ class ConnectorManager
                     $extId = (string) ($rec['id'] ?? $rec['external_id'] ?? $rec['_row_number'] ?? ($currentCursor ? $currentCursor . '_' . $index : (string) $index));
                     $recDate = $rec['date'] ?? $rec['created_at'] ?? $rec['timestamp'] ?? $now;
                     $jsonValues = json_encode($rec, JSON_UNESCAPED_SLASHES);
+                    $recordHash = hash('sha256', (string) $extId);
 
                     $existing = $this->db->queryOne(
                         "SELECT id FROM data_records WHERE dataset_id = :did AND external_id = :eid LIMIT 1",
@@ -275,15 +276,15 @@ class ConnectorManager
 
                     if ($existing) {
                         $this->db->execute(
-                            "UPDATE data_records SET record_date = :d, values_json = :v, updated_at = :u WHERE id = :id",
-                            [':d' => $recDate, ':v' => $jsonValues, ':u' => $now, ':id' => $existing['id']]
+                            "UPDATE data_records SET record_date = :d, record_hash = :hash, data_json = :v, updated_at = :u WHERE id = :id",
+                            [':d' => $recDate, ':hash' => $recordHash, ':v' => $jsonValues, ':u' => $now, ':id' => $existing['id']]
                         );
                         $recordsUpdated++;
                     } else {
                         $this->db->execute(
-                            "INSERT INTO data_records (dataset_id, external_id, record_date, values_json, created_at, updated_at)
-                             VALUES (:did, :eid, :d, :v, :now, :now)",
-                            [':did' => $targetDid, ':eid' => $extId, ':d' => $recDate, ':v' => $jsonValues, ':now' => $now]
+                            "INSERT INTO data_records (dataset_id, external_id, record_date, record_hash, data_json, created_at, updated_at)
+                             VALUES (:did, :eid, :d, :hash, :v, :now, :now)",
+                            [':did' => $targetDid, ':eid' => $extId, ':d' => $recDate, ':hash' => $recordHash, ':v' => $jsonValues, ':now' => $now]
                         );
                         $recordsAdded++;
                     }

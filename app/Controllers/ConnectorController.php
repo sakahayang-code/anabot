@@ -313,4 +313,70 @@ class ConnectorController
             'message' => 'OAuth state token successfully verified.',
         ]);
     }
+
+    /**
+     * Web View: Google Sheets Import Studio
+     */
+    public function googleSheetsImportPage(int|array $id): void
+    {
+        $id = is_array($id) ? (int) ($id['id'] ?? 0) : (int) $id;
+        $connection = $this->connectionModel->findById($id);
+        if (!$connection) {
+            redirect('/connectors');
+            return;
+        }
+
+        $credentials = $this->credentialManager->get($id) ?? [];
+        $connector = new \AnaBot\Connectors\GoogleSheets\GoogleSheetsConnector([], $credentials, $id, null, $this->db);
+        $spreadsheetId = $connector->getSpreadsheetId();
+        $availableSheets = $connector->getAvailableDatasets();
+
+        view('connectors/google_sheets/import', [
+            'pageTitle' => "Import Google Sheets: {$connection['name']}",
+            'connection' => $connection,
+            'spreadsheetId' => $spreadsheetId,
+            'availableSheets' => $availableSheets,
+        ]);
+    }
+
+    /**
+     * API: Get Google Sheets Preview (Headers + Sample Rows + Inferred Schema)
+     */
+    public function googleSheetsPreviewApi(int|array $id): void
+    {
+        $id = is_array($id) ? (int) ($id['id'] ?? 0) : (int) $id;
+        $sheetName = $_GET['sheet'] ?? null;
+
+        try {
+            $credentials = $this->credentialManager->get($id) ?? [];
+            $connector = new \AnaBot\Connectors\GoogleSheets\GoogleSheetsConnector([], $credentials, $id, null, $this->db);
+            $preview = $connector->previewSheet($sheetName, 5);
+
+            Response::json(['success' => true, 'data' => $preview]);
+        } catch (\Throwable $e) {
+            Response::json(['success' => false, 'error' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * API: Execute Google Sheets Atomic Import
+     */
+    public function googleSheetsImportApi(int|array $id): void
+    {
+        $id = is_array($id) ? (int) ($id['id'] ?? 0) : (int) $id;
+        $input = json_decode((string) file_get_contents('php://input'), true) ?? $_POST;
+
+        $sheetName = $input['sheet_name'] ?? 'Sheet1';
+        $datasetName = $input['dataset_name'] ?? null;
+        $columns = $input['columns'] ?? null;
+
+        try {
+            $importer = new \AnaBot\Services\GoogleSheetsImporter($this->db, $this->credentialManager, $this->syncQueue);
+            $result = $importer->importSheet($id, $sheetName, $datasetName, $columns);
+
+            Response::json($result);
+        } catch (\Throwable $e) {
+            Response::json(['success' => false, 'error' => $e->getMessage()], 400);
+        }
+    }
 }

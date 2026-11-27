@@ -59,5 +59,9 @@ $router->group(['prefix' => '/api/v1'], function (Router $api) {
         $authApi->post('/connections/{id}/sync', [\AnaBot\Controllers\ConnectorController::class, 'sync']);
         $authApi->post('/connections/{id}/disconnect', [\AnaBot\Controllers\ConnectorController::class, 'disconnect']);
         $authApi->get('/connections/{id}/history', [\AnaBot\Controllers\ConnectorController::class, 'history']);
+
+        // Google Sheets Integration Endpoints (Phase 5)
+        $authApi->get('/connectors/google-sheets/{id}/preview', [\AnaBot\Controllers\ConnectorController::class, 'googleSheetsPreviewApi']);
+        $authApi->post('/connectors/google-sheets/{id}/import', [\AnaBot\Controllers\ConnectorController::class, 'googleSheetsImportApi']);
     });
 });

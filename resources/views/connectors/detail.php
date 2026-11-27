@@ -51,6 +51,16 @@ $statusBadge = match ($connection['status']) {
                     </svg>
                     Uji Koneksi
                 </button>
+                <?php if ($connection['connector_code'] === 'google_sheets'): ?>
+                    <a href="/connectors/<?= $connection['id'] ?>/google-sheets" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 4px; text-decoration: none; border-color: #10b981; color: #10b981;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="9" y1="21" x2="9" y2="9"></line>
+                        </svg>
+                        Import Studio
+                    </a>
+                <?php endif; ?>
                 <button type="button" class="btn btn-primary" onclick="triggerSync(<?= $connection['id'] ?>)" id="btn-sync">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 4px;">
                         <polyline points="23 4 23 10 17 10"></polyline>

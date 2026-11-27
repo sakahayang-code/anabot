@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace AnaBot\Connectors\GoogleSheets;
 
 use AnaBot\Connectors\BaseConnector;
+use AnaBot\Services\DataNormalizer;
 use RuntimeException;
 
 /**
@@ -11,6 +12,14 @@ use RuntimeException;
  * 
  * Strict Constraint: All access is strictly READ-ONLY.
  * Scope: https://www.googleapis.com/auth/spreadsheets.readonly
+ * 
+ * Supports:
+ * - OAuth 2.0 (Google User Consent)
+ * - Service Account (RS256 JWT exchange)
+ * - Raw Spreadsheet ID or full Google Docs URL
+ * - Automatic header detection & data type inference
+ * - Empty row skipping & currency/date normalization
+ * - Row-offset cursor pagination
  */
 class GoogleSheetsConnector extends BaseConnector
 {
@@ -22,64 +31,93 @@ class GoogleSheetsConnector extends BaseConnector
     private const API_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
     private const READONLY_SCOPE = 'https://www.googleapis.com/auth/spreadsheets.readonly';
 
+    /**
+     * Get resolved spreadsheet ID from config.
+     */
+    public function getSpreadsheetId(): string
+    {
+        $raw = $this->config['spreadsheet_id'] ?? $this->config['spreadsheet_url'] ?? $this->credentials['spreadsheet_id'] ?? $this->credentials['spreadsheet_url'] ?? '';
+        return GoogleAuthHelper::extractSpreadsheetId($raw);
+    }
+
+    /**
+     * Test live connectivity and credentials.
+     */
     public function testConnection(): array
     {
-        $spreadsheetId = $this->config['spreadsheet_id'] ?? '';
+        $spreadsheetId = $this->getSpreadsheetId();
         if (empty($spreadsheetId)) {
             return [
                 'success' => false,
-                'message' => 'Spreadsheet ID is required.',
+                'message' => 'Spreadsheet ID atau URL wajib diisi.',
                 'details' => ['error' => 'MISSING_SPREADSHEET_ID'],
             ];
         }
 
-        $token = $this->credentials['access_token'] ?? $this->credentials['api_key'] ?? '';
-        if (empty($token)) {
-            return [
-                'success' => false,
-                'message' => 'No active OAuth token or API key configured.',
-                'details' => ['error' => 'MISSING_CREDENTIALS'],
-            ];
-        }
-
         try {
+            $token = $this->resolveAccessToken();
+            if (empty($token)) {
+                return [
+                    'success' => false,
+                    'message' => 'Kredensial Google OAuth atau Service Account belum dikonfigurasi.',
+                    'details' => ['error' => 'MISSING_CREDENTIALS'],
+                ];
+            }
+
             $url = self::API_BASE . '/' . urlencode($spreadsheetId) . '?includeGridData=false';
-            $headers = $this->buildHeaders();
+            $headers = $this->buildHeaders($token);
             $response = $this->httpClient->get($url, $headers);
 
-            $isSuccess = $response['status'] === 200;
-            $title = $response['json']['properties']['title'] ?? 'Google Sheet';
+            if ($response['status'] === 200) {
+                $title = $response['json']['properties']['title'] ?? 'Google Sheet';
+                $sheets = $response['json']['sheets'] ?? [];
 
+                return [
+                    'success' => true,
+                    'message' => "Berhasil terhubung ke spreadsheet: {$title}",
+                    'details' => [
+                        'spreadsheet_id' => $spreadsheetId,
+                        'title' => $title,
+                        'sheets_count' => count($sheets),
+                        'sheets' => array_map(fn($s) => $s['properties']['title'] ?? 'Sheet', $sheets),
+                        'duration_ms' => $response['duration_ms'],
+                    ],
+                ];
+            }
+
+            $errMessage = $response['json']['error']['message'] ?? "Google API returned HTTP {$response['status']}";
             return [
-                'success' => $isSuccess,
-                'message' => $isSuccess ? "Connected to Google Sheet: {$title}" : "Google Sheets API returned HTTP {$response['status']}",
+                'success' => false,
+                'message' => "Gagal terhubung ke Google Sheets: {$errMessage}",
                 'details' => [
                     'status_code' => $response['status'],
-                    'spreadsheet_title' => $title,
-                    'sheets_count' => count($response['json']['sheets'] ?? []),
-                    'duration_ms' => $response['duration_ms'],
+                    'error' => $response['json']['error'] ?? $response['body'],
                 ],
             ];
         } catch (\Throwable $e) {
-            $this->log('error', "Google Sheets connection test failed: {$e->getMessage()}");
+            $this->log('error', "Google Sheets test connection error: {$e->getMessage()}");
             return [
                 'success' => false,
-                'message' => 'Google Sheets connection error: ' . $e->getMessage(),
+                'message' => 'Kesalahan koneksi Google Sheets: ' . $e->getMessage(),
                 'details' => ['exception' => get_class($e)],
             ];
         }
     }
 
+    /**
+     * Get available sheets/tabs from the spreadsheet.
+     */
     public function getAvailableDatasets(): array
     {
-        $spreadsheetId = $this->config['spreadsheet_id'] ?? '';
+        $spreadsheetId = $this->getSpreadsheetId();
         if (empty($spreadsheetId)) {
             return [];
         }
 
         try {
+            $token = $this->resolveAccessToken();
             $url = self::API_BASE . '/' . urlencode($spreadsheetId) . '?includeGridData=false';
-            $response = $this->httpClient->get($url, $this->buildHeaders());
+            $response = $this->httpClient->get($url, $this->buildHeaders($token));
 
             if ($response['status'] !== 200 || !isset($response['json']['sheets'])) {
                 return [];
@@ -87,58 +125,188 @@ class GoogleSheetsConnector extends BaseConnector
 
             $datasets = [];
             foreach ($response['json']['sheets'] as $sheet) {
-                $sheetTitle = $sheet['properties']['title'] ?? 'Sheet';
+                $props = $sheet['properties'] ?? [];
+                $title = $props['title'] ?? 'Sheet';
+                $rowCount = $props['gridProperties']['rowCount'] ?? 0;
+                $colCount = $props['gridProperties']['columnCount'] ?? 0;
+
                 $datasets[] = [
-                    'id' => $sheetTitle,
-                    'name' => $sheetTitle,
-                    'description' => "Sheet tab '{$sheetTitle}' with {$sheet['properties']['gridProperties']['rowCount']} rows",
+                    'id' => $title,
+                    'name' => $title,
+                    'description' => "Lembar kerja '{$title}' ({$rowCount} baris, {$colCount} kolom)",
+                    'row_count' => $rowCount,
+                    'col_count' => $colCount,
                 ];
             }
             return $datasets;
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            $this->log('warning', "Failed to list Google Sheets tabs: {$e->getMessage()}");
             return [];
         }
     }
 
+    /**
+     * Fetch preview of a sheet tab (headers + sample rows + inferred schema).
+     */
+    public function previewSheet(?string $sheetName = null, int $sampleLimit = 5): array
+    {
+        $spreadsheetId = $this->getSpreadsheetId();
+        if (empty($spreadsheetId)) {
+            throw new RuntimeException('Spreadsheet ID is not configured.');
+        }
+
+        $available = $this->getAvailableDatasets();
+        $targetSheet = $sheetName ?? ($available[0]['id'] ?? 'Sheet1');
+
+        $token = $this->resolveAccessToken();
+        // Read header + sample rows (e.g. A1:ZZ6)
+        $endRow = 1 + max(1, $sampleLimit);
+        $range = urlencode("{$targetSheet}!A1:ZZ{$endRow}");
+        $url = self::API_BASE . '/' . urlencode($spreadsheetId) . "/values/{$range}?majorDimension=ROWS";
+
+        $response = $this->httpClient->get($url, $this->buildHeaders($token));
+        if ($response['status'] !== 200) {
+            throw new RuntimeException("Gagal mengambil preview data: Status {$response['status']}");
+        }
+
+        $rawRows = $response['json']['values'] ?? [];
+        if (empty($rawRows)) {
+            return [
+                'sheet_name' => $targetSheet,
+                'headers' => [],
+                'columns' => [],
+                'sample_rows' => [],
+                'total_rows_estimate' => 0,
+            ];
+        }
+
+        // 1. Detect header row (first non-empty row)
+        $headerRow = array_shift($rawRows);
+        $headers = [];
+        $columns = [];
+        $hasPrimaryDate = false;
+
+        // Build column definitions and collect sample values per column
+        $colSamples = [];
+        foreach ($headerRow as $cIdx => $rawHeader) {
+            $cleanName = DataNormalizer::sanitizeColumnName((string) $rawHeader, $cIdx);
+            $headers[$cIdx] = [
+                'raw_name' => (string) $rawHeader,
+                'field_name' => $cleanName,
+            ];
+            $colSamples[$cleanName] = [];
+        }
+
+        // 2. Parse sample rows
+        $sampleRecords = [];
+        foreach ($rawRows as $row) {
+            if ($this->isRowEmpty($row)) {
+                continue;
+            }
+
+            $record = [];
+            foreach ($headers as $cIdx => $meta) {
+                $fieldName = $meta['field_name'];
+                $val = $row[$cIdx] ?? null;
+                $record[$fieldName] = $val;
+                if ($val !== null && trim((string) $val) !== '') {
+                    $colSamples[$fieldName][] = (string) $val;
+                }
+            }
+            $sampleRecords[] = $record;
+        }
+
+        // 3. Infer data type and role per column
+        foreach ($headers as $cIdx => $meta) {
+            $fName = $meta['field_name'];
+            $samples = $colSamples[$fName] ?? [];
+            $inferredType = DataNormalizer::inferColumnType($samples);
+            $roleInfo = DataNormalizer::classifyColumnRole($fName, $inferredType, $hasPrimaryDate);
+
+            if ($roleInfo['is_primary_date']) {
+                $hasPrimaryDate = true;
+            }
+
+            $columns[] = [
+                'column_name' => $fName,
+                'label' => $meta['raw_name'],
+                'data_type' => $inferredType,
+                'is_primary_date' => $roleInfo['is_primary_date'],
+                'is_metric' => $roleInfo['is_metric'],
+                'is_dimension' => $roleInfo['is_dimension'],
+                'column_order' => $cIdx,
+            ];
+        }
+
+        return [
+            'sheet_name' => $targetSheet,
+            'headers' => array_column($headers, 'raw_name'),
+            'columns' => $columns,
+            'sample_rows' => $sampleRecords,
+            'total_rows_estimate' => count($rawRows),
+        ];
+    }
+
+    /**
+     * Fetch paginated batch of data records (READ-ONLY).
+     */
     public function fetchData(string $resourceId, ?string $cursor = null, int $limit = 100): array
     {
-        $spreadsheetId = $this->config['spreadsheet_id'] ?? '';
+        $spreadsheetId = $this->getSpreadsheetId();
         if (empty($spreadsheetId)) {
             throw new RuntimeException('Spreadsheet ID is not configured.');
         }
 
         $sheetName = $resourceId;
-        // Cursor represents 1-based start row index (e.g. "2" for row 2, skipping header row 1)
+        // Cursor represents 1-based start row index (defaults to row 2, skipping row 1 header)
         $startRow = is_numeric($cursor) && (int) $cursor > 1 ? (int) $cursor : 2;
         $endRow = $startRow + $limit - 1;
 
+        $token = $this->resolveAccessToken();
         $range = urlencode("{$sheetName}!A{$startRow}:ZZ{$endRow}");
         $url = self::API_BASE . '/' . urlencode($spreadsheetId) . "/values/{$range}?majorDimension=ROWS";
 
         // READ-ONLY: HTTP GET
-        $response = $this->httpClient->get($url, $this->buildHeaders());
+        $response = $this->httpClient->get($url, $this->buildHeaders($token));
 
         if ($response['status'] !== 200) {
             throw new RuntimeException("Google Sheets API error: Status {$response['status']} - {$response['body']}");
         }
 
-        $rows = $response['json']['values'] ?? [];
+        $rawRows = $response['json']['values'] ?? [];
         $records = [];
 
-        // Fetch header row if starting at row 2
-        $headers = $this->getHeaderRow($spreadsheetId, $sheetName);
+        // Fetch header definitions
+        $headerMeta = $this->getHeaderMeta($spreadsheetId, $sheetName, $token);
 
-        foreach ($rows as $rowIndex => $row) {
-            $record = [];
-            foreach ($headers as $colIndex => $colName) {
-                $record[$colName] = $row[$colIndex] ?? null;
+        foreach ($rawRows as $rowIndex => $row) {
+            if ($this->isRowEmpty($row)) {
+                continue;
             }
+
+            $record = [];
+            foreach ($headerMeta as $colIndex => $col) {
+                $rawVal = $row[$colIndex] ?? null;
+                $cleanVal = $rawVal !== null ? trim((string) $rawVal) : null;
+
+                // Normalize numbers & dates
+                if ($cleanVal !== null && $cleanVal !== '') {
+                    if ($col['data_type'] === 'NUMERIC' || $col['data_type'] === 'INTEGER') {
+                        $cleanVal = DataNormalizer::cleanCurrency($cleanVal);
+                    } elseif ($col['data_type'] === 'DATETIME') {
+                        $cleanVal = DataNormalizer::normalizeDate($cleanVal);
+                    }
+                }
+
+                $record[$col['column_name']] = $cleanVal;
+            }
+
             $record['_row_number'] = $startRow + $rowIndex;
             $records[] = $record;
         }
 
         $nextCursor = null;
-        if (count($rows) >= $limit) {
+        if (count($rawRows) >= $limit) {
             $nextCursor = (string) ($endRow + 1);
         }
 
@@ -161,31 +329,79 @@ class GoogleSheetsConnector extends BaseConnector
         ];
     }
 
-    private function getHeaderRow(string $spreadsheetId, string $sheetName): array
+    /**
+     * Resolve active OAuth access token or exchange Service Account JWT.
+     */
+    public function resolveAccessToken(): string
+    {
+        // 1. Direct access token
+        if (!empty($this->credentials['access_token'])) {
+            return $this->credentials['access_token'];
+        }
+
+        // 2. Service Account JSON key authentication
+        $sa = $this->credentials['service_account_json'] ?? $this->credentials['service_account'] ?? null;
+        if (!empty($sa)) {
+            $saData = is_array($sa) ? $sa : json_decode((string) $sa, true);
+            if (is_array($saData) && isset($saData['private_key'], $saData['client_email'])) {
+                $jwt = GoogleAuthHelper::createServiceAccountJwt($saData, self::READONLY_SCOPE);
+                $res = GoogleAuthHelper::exchangeJwtForAccessToken($jwt, $this->httpClient);
+                $this->credentials['access_token'] = $res['access_token'];
+                return $res['access_token'];
+            }
+        }
+
+        // 3. Fallback to API Key if configured
+        return (string) ($this->credentials['api_key'] ?? '');
+    }
+
+    private function getHeaderMeta(string $spreadsheetId, string $sheetName, string $token): array
     {
         $range = urlencode("{$sheetName}!A1:ZZ1");
         $url = self::API_BASE . '/' . urlencode($spreadsheetId) . "/values/{$range}?majorDimension=ROWS";
 
         try {
-            $res = $this->httpClient->get($url, $this->buildHeaders());
+            $res = $this->httpClient->get($url, $this->buildHeaders($token));
             $firstRow = $res['json']['values'][0] ?? [];
             if (!empty($firstRow)) {
-                return array_map(fn($col) => trim((string) $col), $firstRow);
+                $meta = [];
+                foreach ($firstRow as $idx => $header) {
+                    $cleanName = DataNormalizer::sanitizeColumnName((string) $header, $idx);
+                    $meta[] = [
+                        'raw_name' => (string) $header,
+                        'column_name' => $cleanName,
+                        'data_type' => 'TEXT',
+                    ];
+                }
+                return $meta;
             }
         } catch (\Throwable) {
             // fallback
         }
 
-        return ['col_a', 'col_b', 'col_c', 'col_d', 'col_e'];
+        return [
+            ['raw_name' => 'Column A', 'column_name' => 'col_1', 'data_type' => 'TEXT'],
+            ['raw_name' => 'Column B', 'column_name' => 'col_2', 'data_type' => 'TEXT'],
+            ['raw_name' => 'Column C', 'column_name' => 'col_3', 'data_type' => 'TEXT'],
+        ];
     }
 
-    private function buildHeaders(): array
+    private function buildHeaders(string $token): array
     {
         $headers = ['Accept: application/json'];
-        $token = $this->credentials['access_token'] ?? $this->credentials['api_key'] ?? '';
         if (!empty($token)) {
             $headers[] = "Authorization: Bearer {$token}";
         }
         return $headers;
+    }
+
+    private function isRowEmpty(array $row): bool
+    {
+        foreach ($row as $cell) {
+            if ($cell !== null && trim((string) $cell) !== '') {
+                return false;
+            }
+        }
+        return true;
     }
 }

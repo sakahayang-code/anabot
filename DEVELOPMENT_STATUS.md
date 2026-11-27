@@ -1,7 +1,7 @@
 # Status Pengembangan AnaBot (Development Status)
 
 Terakhir diperbarui: 2026-11-27  
-Fase Saat Ini: **FASE 4 — Selesai (Menunggu Persetujuan Masuk FASE 5)**  
+Fase Saat Ini: **FASE 5 — Selesai (Menunggu Persetujuan Masuk FASE 6)**  
 Status Integritas Data: **Aman (Seluruh Pengujian Menggunakan Database Testing Terisolasi)**
 
 ---
@@ -15,8 +15,8 @@ Status Integritas Data: **Aman (Seluruh Pengujian Menggunakan Database Testing T
 | **FASE 2** | **Dashboard & UI Framework** | **SELESAI** | Layout modern SaaS, responsive desktop & mobile, dark/light mode, Chart.js lokal, 10 menu modul, bento KPI aktual, 7/7 test suites lulus. |
 | **FASE 3** | **Database & Data Explorer** | **SELESAI** | Dataset manager, schema discovery, records browser dengan search/filter/sorting, pagination SQLite, streaming CSV export, 8/8 test suites lulus. |
 | **FASE 4** | **Connector Framework** | **SELESAI** | Interface konektor standar, BaseConnector (READ-ONLY), HttpClient (SSRF protection & backoff), CredentialManager (AES-256-GCM), OAuthStateManager, SyncQueueManager (cursor-based), 9/9 test suites lulus. |
-| **FASE 5** | **Integrasi Pertama (Google Sheets)** | *Menunggu Persetujuan* | OAuth/Service auth Google Sheets, test connection, normalisasi data, incremental sync via SQLite. |
-| **FASE 6** | **Analytics Engine (PHP)** | *Belum Mulai* | Mesin statistik deskriptif murni PHP, growth, korelasi, pergerakan tren, audit trail deterministik. |
+| **FASE 5** | **Integrasi Pertama (Google Sheets)** | **SELESAI** | Google Service Account RS256 signing, DataNormalizer, auto-schema discovery, preview studio 5 baris, atomic importer, 10/10 test suites lulus. |
+| **FASE 6** | **Analytics Engine (PHP)** | *Menunggu Persetujuan* | Mesin statistik deskriptif murni PHP, growth, korelasi, pergerakan tren, audit trail deterministik. |
 | **FASE 7** | **Multi-Provider AI Framework** | *Belum Mulai* | Adapter Gemini, OpenAI, Claude, OpenAI-compatible, usage tracking & budgeting, provider fallback. |
 | **FASE 8** | **AI Analyst** | *Belum Mulai* | Context builder berbasis hasil AnalyticsEngine, chat analitis grounded data, sesi percakapan, rekomendasi. |
 | **FASE 9** | **Predictive Analytics & Anomaly** | *Belum Mulai* | Deteksi anomali IQR & Z-score, forecasting moving average/exponential smoothing dengan disclaimer asumsi. |
@@ -27,36 +27,33 @@ Status Integritas Data: **Aman (Seluruh Pengujian Menggunakan Database Testing T
 
 ---
 
-## 2. Rincian Capaian FASE 4 (Connector Framework)
-- [x] Standard Connector Contract & Interface `ConnectorInterface.php` di `app/Connectors/` dengan penegakan mutlak akses **READ-ONLY**.
-- [x] Abstract `BaseConnector.php` dengan request throttling, exponential backoff, penanganan rate-limit HTTP 429, dan sensor otomatis data rahasia.
-- [x] `HttpClient.php` khusus cURL Native PHP 8.4 dengan proteksi SSRF (blokir IP privat RFC1918, link-local, loopback, cloud metadata), batas memori 10MB, dan verifikasi SSL ketat.
-- [x] Layanan `CredentialManager.php` untuk penyimpanan kredensial token terenkripsi AES-256-GCM, deteksi kadaluarsa, rotasi token, dan pencabutan aman saat diputus.
-- [x] Layanan `OAuthStateManager.php` untuk token anti-CSRF 64-karakter hex dengan garansi sekali pakai (single-use) pencegah replay attack.
-- [x] Layanan `SyncQueueManager.php` untuk pelacakan antrean sinkronisasi, persistensi cursor inkremental pada tabel `sync_cursors`, pemulihan parsial (partial sync recovery), dan log audit tersensor pada `sync_logs`.
-- [x] Layanan `ConnectorManager.php` untuk orkestrasi konektor, registrasi driver, sinkronisasi katalog 10 platform digital resmi, dan uji koneksi live.
-- [x] Driver konkret: `CustomAPIConnector.php` (REST API dengan cursor pagination) dan `GoogleSheetsConnector.php` (Google Sheets API v4 read-only).
-- [x] Model data `PlatformConnection.php`, `Connector.php`, `SyncJob.php` di `app/Models/`.
-- [x] Antarmuka manajemen konektor di `resources/views/connectors/`: `index.php` (katalog 10 platform & koneksi aktif), `create.php` (formulir koneksi baru), `detail.php` (status enkripsi, cursor & log stream), dan `history.php` (audit riwayat sync global).
-- [x] Pengontrol web & REST API endpoints (`/connectors`, `/connections`, `/connections/{id}/test`, `/connections/{id}/sync`, `/connections/{id}/disconnect`, `/connections/{id}/history`).
-- [x] Pengujian unit & integrasi otomatis `tests/Unit/ConnectorFrameworkTest.php` (9/9 test suites lulus 100%).
+## 2. Rincian Capaian FASE 5 (Integrasi Pertama: Google Sheets)
+- [x] Engine `DataNormalizer.php` untuk sanitasi kolom ke snake_case, inferensi tipe data (DATETIME, INTEGER, NUMERIC, BOOLEAN, TEXT), pembersihan mata uang (`Rp`, `$`, `%`), normalisasi tanggal ISO-8601, dan klasifikasi peran kolom (`is_primary_date`, `is_metric`, `is_dimension`).
+- [x] Helper `GoogleAuthHelper.php` untuk ekstraksi Spreadsheet ID fleksibel dan penandatanganan JWT Google Service Account RS256 mandiri (native OpenSSL, zero external library).
+- [x] Driver `GoogleSheetsConnector.php` dengan penegakan mutlak izin **READ-ONLY** (`spreadsheets.readonly`), pembacaan tab sheet (`sheets.get`), pratinjau 5 baris pertama dengan filter baris kosong, dan paginasi range inkremental.
+- [x] Layanan `GoogleSheetsImporter.php` untuk orkestrasi impor atomik ke SQLite (`data_sources`, `datasets`, `dataset_columns`, `data_records`, dan `sync_jobs`) serta proteksi idempotensi anti-duplikasi baris.
+- [x] Antarmuka `resources/views/connectors/google_sheets/import.php` (Google Sheets Import Studio) dengan pemilihan tab interaktif, pratinjau tabel live, dan badge peran kolom.
+- [x] Pengontrol web & REST API endpoints: `GET /connectors/{id}/google-sheets`, `GET /api/v1/connectors/google-sheets/{id}/preview`, dan `POST /api/v1/connectors/google-sheets/{id}/import`.
+- [x] Pengujian unit & integrasi komprehensif `tests/Unit/GoogleSheetsIntegrationTest.php` (8 skenario lulus 100%).
+- [x] Seluruh 10/10 automated test suites AnaBot lulus 100%.
 
 ---
 
-## 3. Rencana Tugas untuk FASE 5 (Integrasi Pertama: Google Sheets)
-Setelah pengguna memberikan persetujuan untuk FASE 5:
-1. Pembangunan **Google Sheets OAuth 2.0 Client & Service Account Flow**:
-   - Dukungan autentikasi Google OAuth 2.0 (User Consent) & Google Service Account (JSON Key).
-   - Pengambilan metadata spreadsheet (`sheets.get`) dan validasi scope `https://www.googleapis.com/auth/spreadsheets.readonly`.
-2. Pembangunan **Deteksi Skema Otomatis (Auto-Schema Discovery)**:
-   - Pembacaan baris header (Header Row Discovery) dari tab lembar kerja.
-   - Inferensi tipe data otomatis (DATETIME, INTEGER, NUMERIC, TEXT, BOOLEAN) per kolom.
-3. Pembangunan **Pipeline Sinkronisasi & Normalisasi Data Google Sheets**:
-   - Pembacaan range bertahap menggunakan row-offset cursor (`Sheet1!A2:ZZ1000`).
-   - Normalisasi tipe data dan pembersihan nilai kosong/karakter spesial.
-   - Penyimpanan batch atomik ke tabel `data_records` dan pembuatan/pembaruan kolom di `dataset_columns`.
-4. Pembangunan **UI Khusus Konfigurasi Google Sheets**:
-   - Modal/Halaman input ID spreadsheet atau pemilih tab sheet.
-   - Pratinjau 5 baris pertama spreadsheet sebelum konfirmasi impor ke SQLite.
-5. Pembangunan **Pengujian Unit & Integrasi Fase 5**:
-   - Pengujian parsing rentang baris, verifikasi token refresh Google, dan pengujian sinkronisasi inkremental baris baru.
+## 3. Rencana Tugas untuk FASE 6 (Analytics Engine - Pure PHP)
+Setelah pengguna memberikan persetujuan untuk FASE 6:
+1. Pembangunan **Statistik Deskriptif Murni PHP (`AnalyticsEngine.php`)**:
+   - Perhitungan Mean, Median, Mode, Min, Max, Range, Variance, dan Standard Deviation.
+   - Perhitungan persentase kontribusi dan distribusi frekuensi.
+2. Pembangunan **Analisis Pertumbuhan & Tren Waktu (Growth & Time Series)**:
+   - Month-over-Month (MoM), Year-over-Year (YoY), dan Day-over-Day (DoD) growth calculation.
+   - Moving Average (SMA & EMA) untuk deteksi arah tren (naik, turun, mendatar).
+3. Pembangunan **Analisis Korelasi & Asosiasi**:
+   - Pearson Correlation Coefficient (\(r\)) antara 2 variabel metrik.
+   - Peringkat korelasi terkuat antar-metrik dalam dataset.
+4. Pembangunan **Audit Trail & Bukti Perhitungan (Calculation Transparency)**:
+   - Output angka terverifikasi (verifiable numbers) yang siap dikonsumsi oleh Mesin AI (Fase 8).
+   - Format metrik JSON terstandarisasi untuk visualisasi grafik.
+5. Pembangunan **UI Analytics Studio & Widget Visualisasi**:
+   - Dasbor analitik interaktif per dataset dengan visualisasi grafik tren.
+6. Pembangunan **Automated Test Suite Fase 6**:
+   - Pengujian matematis ketat terhadap seluruh rumus statistik.
