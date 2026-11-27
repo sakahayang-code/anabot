@@ -80,12 +80,14 @@ class ConnectorController
     public function store(): void
     {
         $input = $_POST;
-        $validator = new Validator($input);
-        $validator->required(['connector_code', 'name']);
+        $validator = Validator::make($input, [
+            'connector_code' => 'required',
+            'name' => 'required',
+        ]);
 
-        if (!$validator->isValid()) {
-            $_SESSION['flash_error'] = implode(' ', $validator->getErrors());
-            redirect('/connectors/create?code=' . urlencode($input['connector_code'] ?? ''));
+        if ($validator->fails()) {
+            $_SESSION['flash_error'] = $validator->firstError() ?? 'Kode konektor dan nama koneksi wajib diisi.';
+            redirect('/connectors/create?code=' . urlencode((string) ($input['connector_code'] ?? '')));
             return;
         }
 

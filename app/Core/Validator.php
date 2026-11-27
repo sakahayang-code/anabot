@@ -12,16 +12,45 @@ class Validator
     private array $rules;
     private array $errors = [];
 
-    public function __construct(array $data, array $rules)
+    public function __construct(array $data, array $rules = [])
     {
         $this->data = $data;
         $this->rules = $rules;
-        $this->validate();
+        if (!empty($rules)) {
+            $this->validate();
+        }
     }
 
     public static function make(array $data, array $rules): self
     {
         return new self($data, $rules);
+    }
+
+    public function required(array|string $fields): self
+    {
+        $fields = (array) $fields;
+        foreach ($fields as $field) {
+            $this->rules[$field] = isset($this->rules[$field]) ? $this->rules[$field] . '|required' : 'required';
+        }
+        $this->errors = [];
+        $this->validate();
+        return $this;
+    }
+
+    public function isValid(): bool
+    {
+        return $this->passes();
+    }
+
+    public function getErrors(): array
+    {
+        $flattened = [];
+        foreach ($this->errors as $fieldErrors) {
+            foreach ($fieldErrors as $err) {
+                $flattened[] = $err;
+            }
+        }
+        return $flattened;
     }
 
     public function passes(): bool
