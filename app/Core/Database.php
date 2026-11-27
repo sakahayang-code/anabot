@@ -124,6 +124,11 @@ class Database
         return $stmt->fetchAll();
     }
 
+    public function queryAll(string $sql, array $params = []): array
+    {
+        return $this->query($sql, $params);
+    }
+
     public function queryOne(string $sql, array $params = []): ?array
     {
         $stmt = $this->getPdo()->prepare($sql);

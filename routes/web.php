@@ -63,43 +63,17 @@ $router->group(['middleware' => ['auth']], function (Router $auth) {
         );
     });
 
-    // 3. Data Sources (Roadmap Phase 4 & 5)
-    $auth->get('/connectors', function () {
-        (new ModulePlaceholderController())->show(
-            'Data Sources - Connected Apps',
-            4,
-            'Manajemen koneksi platform digital eksternal dengan otorisasi read-only.',
-            [
-                ['title' => 'Google Sheets', 'desc' => 'Konektor pertama dengan sinkronisasi spreadsheet atomik (Fase 5).'],
-                ['title' => 'Custom REST API', 'desc' => 'Pengambilan data dari webhook atau endpoint JSON eksternal (Fase 12).'],
-                ['title' => 'MySQL Eksternal', 'desc' => 'Menghubungkan database MySQL eksternal sebagai sumber data read-only (Fase 12).']
-            ]
-        );
-    });
-
-    $auth->get('/connectors/new', function () {
-        (new ModulePlaceholderController())->show(
-            'Data Sources - Add Connection',
-            4,
-            'Katalog konektor resmi dan panduan pengaturan kredensial API terenkripsi AES-256-GCM.',
-            [
-                ['title' => 'Otorisasi OAuth 2.0', 'desc' => 'Alur izin OAuth read-only aman tanpa akses tulis.'],
-                ['title' => 'Tes Koneksi Instan', 'desc' => 'Memastikan kredensial valid sebelum menyimpan ke SQLite.']
-            ]
-        );
-    });
-
-    $auth->get('/connectors/history', function () {
-        (new ModulePlaceholderController())->show(
-            'Data Sources - Sync History',
-            4,
-            'Log audit dan riwayat eksekusi sinkronisasi data beserta jumlah record baru/update.',
-            [
-                ['title' => 'Audit Log Detail', 'desc' => 'Mencatat waktu mulai, selesai, dan pesan error jika terjadi kegagalan.'],
-                ['title' => 'Incremental Sync Tracking', 'desc' => 'Menampilkan status cursor pagination terakhir.']
-            ]
-        );
-    });
+    // 3. Data Sources (Active Phase 4)
+    $auth->get('/connectors', [\AnaBot\Controllers\ConnectorController::class, 'index']);
+    $auth->get('/connectors/create', [\AnaBot\Controllers\ConnectorController::class, 'create']);
+    $auth->get('/connectors/new', [\AnaBot\Controllers\ConnectorController::class, 'create']);
+    $auth->get('/connectors/history', [\AnaBot\Controllers\ConnectorController::class, 'historyPage']);
+    $auth->get('/connectors/oauth/authorize/{code}', [\AnaBot\Controllers\ConnectorController::class, 'oauthAuthorize']);
+    $auth->get('/connectors/oauth/callback', [\AnaBot\Controllers\ConnectorController::class, 'oauthCallback']);
+    $auth->post('/connectors', [\AnaBot\Controllers\ConnectorController::class, 'store']);
+    $auth->get('/connectors/{id}', [\AnaBot\Controllers\ConnectorController::class, 'show']);
+    $auth->post('/connectors/{id}/settings', [\AnaBot\Controllers\ConnectorController::class, 'updateSettings']);
+    $auth->post('/connectors/{id}/disconnect', [\AnaBot\Controllers\ConnectorController::class, 'disconnect']);
 
     // 4. Data Explorer (Active Phase 3)
     $auth->get('/explorer/datasets', [DataExplorerController::class, 'datasets']);

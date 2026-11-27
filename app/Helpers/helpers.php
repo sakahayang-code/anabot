@@ -35,7 +35,10 @@ if (!function_exists('load_env')) {
             if (str_contains($line, '=')) {
                 [$key, $value] = explode('=', $line, 2);
                 $key = trim($key);
-                $value = trim($value);
+                // Strip unquoted inline comments
+                if (!str_starts_with($value, '"') && !str_starts_with($value, "'") && str_contains($value, ' #')) {
+                    $value = trim(explode(' #', $value, 2)[0]);
+                }
 
                 // Strip quotes if present
                 if ((str_starts_with($value, '"') && str_ends_with($value, '"')) ||
@@ -158,5 +161,48 @@ if (!function_exists('storage_path')) {
     {
         $base = config('app.paths.storage', dirname(__DIR__, 2) . '/storage');
         return $subpath ? rtrim($base, '/') . '/' . ltrim($subpath, '/') : $base;
+    }
+}
+
+if (!function_exists('view')) {
+    function view(string $viewPath, array $data = [], int $status = 200): void
+    {
+        ob_start();
+        extract($data, EXTR_SKIP);
+        $baseDir = (string) config('app.paths.views', dirname(__DIR__, 2) . '/resources/views');
+        $fullPath = rtrim($baseDir, '/') . '/' . ltrim($viewPath, '/') . '.php';
+        if (!file_exists($fullPath)) {
+            throw new \RuntimeException("View template not found at [{$fullPath}].");
+        }
+        require $fullPath;
+        $content = ob_get_clean();
+
+        \AnaBot\Core\Response::view('layouts/main', [
+            'pageTitle' => $data['pageTitle'] ?? 'AnaBot',
+            'content' => $content,
+        ], $status);
+    }
+}
+
+if (!function_exists('redirect')) {
+    function redirect(string $url, int $status = 302): void
+    {
+        \AnaBot\Core\Response::redirect($url, $status);
+    }
+}
+
+if (!function_exists('url')) {
+    function url(string $path = ''): string
+    {
+        $appUrl = rtrim((string) env('APP_URL', 'http://localhost:8080'), '/');
+        return $path ? $appUrl . '/' . ltrim($path, '/') : $appUrl;
+    }
+}
+
+if (!function_exists('is_api_request')) {
+    function is_api_request(): bool
+    {
+        $uri = $_SERVER['REQUEST_URI'] ?? '';
+        return str_starts_with($uri, '/api/') || (isset($_SERVER['HTTP_ACCEPT']) && str_contains($_SERVER['HTTP_ACCEPT'], 'application/json'));
     }
 }

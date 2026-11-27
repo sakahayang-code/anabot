@@ -39,6 +39,14 @@ class App
             return $this;
         }
 
+        // Auto-load .env if not loaded yet
+        if (empty(env('APP_KEY')) && function_exists('load_env')) {
+            $defaultEnv = dirname(__DIR__, 2) . '/.env';
+            if (file_exists($defaultEnv)) {
+                load_env($defaultEnv);
+            }
+        }
+
         // Configure Timezone
         date_default_timezone_set((string) config('app.timezone', 'Asia/Jakarta'));
 

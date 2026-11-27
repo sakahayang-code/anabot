@@ -34,5 +34,30 @@ $router->group(['prefix' => '/api/v1'], function (Router $api) {
         $authApi->get('/datasets/{id}/records', [\AnaBot\Controllers\DataExplorerController::class, 'apiGetRecords']);
         $authApi->get('/datasets/{id}/schema', [\AnaBot\Controllers\DataExplorerController::class, 'apiGetSchema']);
         $authApi->get('/datasets/{id}/export', [\AnaBot\Controllers\DataExplorerController::class, 'exportCsv']);
+
+        // Connector & Integration Endpoints (Phase 4)
+        $authApi->get('/connectors', function () {
+            $manager = new \AnaBot\Services\ConnectorManager();
+            return \AnaBot\Core\Response::json(['success' => true, 'data' => $manager->listCatalog()]);
+        });
+        $authApi->get('/connections', function () {
+            $model = new \AnaBot\Models\PlatformConnection();
+            return \AnaBot\Core\Response::json(['success' => true, 'data' => $model->getAllWithConnectors()]);
+        });
+        $authApi->post('/connections', [\AnaBot\Controllers\ConnectorController::class, 'store']);
+        $authApi->get('/connections/logs/{job_id}', function (int $jobId) {
+            $queue = new \AnaBot\Services\SyncQueueManager();
+            return \AnaBot\Core\Response::json(['success' => true, 'data' => $queue->getJobLogs($jobId)]);
+        });
+        $authApi->get('/connections/{id}', function (int $id) {
+            $model = new \AnaBot\Models\PlatformConnection();
+            $conn = $model->findById($id);
+            if (!$conn) return \AnaBot\Core\Response::json(['success' => false, 'error' => 'Not found'], 404);
+            return \AnaBot\Core\Response::json(['success' => true, 'data' => $conn]);
+        });
+        $authApi->post('/connections/{id}/test', [\AnaBot\Controllers\ConnectorController::class, 'test']);
+        $authApi->post('/connections/{id}/sync', [\AnaBot\Controllers\ConnectorController::class, 'sync']);
+        $authApi->post('/connections/{id}/disconnect', [\AnaBot\Controllers\ConnectorController::class, 'disconnect']);
+        $authApi->get('/connections/{id}/history', [\AnaBot\Controllers\ConnectorController::class, 'history']);
     });
 });

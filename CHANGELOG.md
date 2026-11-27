@@ -4,6 +4,56 @@ Seluruh perubahan penting pada proyek AnaBot dicatat dalam dokumen ini. Format m
 
 ---
 
+## [0.5.0-dev] - 2026-11-27 (FASE 4 — Connector Framework)
+
+### Ditambahkan (Added)
+- **Standard Connector Interface & Base Connector (`app/Connectors/`):**
+  - `ConnectorInterface.php`: Kontrak standar seluruh konektor platform eksternal dengan penegakan mutlak **READ-ONLY** (Aturan 1.16 & 1.17). Tidak ada konektor yang diizinkan mengubah/menghapus data pada platform eksternal.
+  - `BaseConnector.php`: Kelas abstrak fondasi konektor yang menyediakan request throttling, penanganan backoff rate limit (HTTP 429), sensor data sensitif otomatis, dan integrasi logging ke `sync_logs`.
+- **Resilient & Secure HTTP Client (`app/Services/HttpClient.php`):**
+  - Mesin HTTP client berbasis PHP Native 8.4 cURL murni (zero external dependency, kompatibel dengan Shared Hosting).
+  - Batas timeout ketat: 10 detik connect timeout, 30 detik total execution timeout.
+  - Proteksi memori hosting: Guard ukuran response maksimum 10 MB untuk mencegah memory exhaustion.
+  - **SSRF Protection:** Blokir mutlak terhadap seluruh range IP privat RFC1918 (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), loopback (`127.0.0.0/8`), link-local / cloud metadata (`169.254.169.254`), dan IPv6 internal (`::1`, ULA).
+  - Exponential backoff otomatis dengan jitter acak pada respons rate limit HTTP 429 dan HTTP 503.
+  - Verifikasi SSL ketat wajib (`CURLOPT_SSL_VERIFYPEER => true`, `CURLOPT_SSL_VERIFYHOST => 2`).
+  - Redaksi otomatis kredensial sensitif pada header dan URL log audit.
+- **Credential Manager Terenkripsi (`app/Services/CredentialManager.php`):**
+  - Penyimpanan kredensial API dan OAuth token terenkripsi dua arah dengan algoritma **AES-256-GCM** pada tabel `connection_credentials`.
+  - Deteksi token kadaluarsa (`isExpired()`) dan peringatan pembaruan otomatis (`needsRefresh()`).
+  - Mekanisme rotasi token (`updateTokens()`).
+  - Pencabutan dan pembersihan kredensial aman saat sambungan diputus (`revoke()`).
+- **OAuth 2.0 Anti-CSRF State Manager (`app/Services/OAuthStateManager.php`):**
+  - Pembuatan token state anti-CSRF acak kriptografis 64-karakter hex dengan batas waktu kadaluarsa (15 menit).
+  - Garansi konsumsi sekali pakai (single-use): Token langsung dihapus saat verifikasi pertama berhasil, menggagalkan segala bentuk replay attack.
+- **Sync Queue & Incremental Cursor Engine (`app/Services/SyncQueueManager.php`):**
+  - Pengelolaan siklus hidup tugas sinkronisasi (`pending` -> `running` -> `completed` / `failed` / `partial`).
+  - Penyimpanan dan pemulihan cursor pagination berbasis resource pada tabel `sync_cursors`.
+  - Audit log per-langkah detail pada tabel `sync_logs` dengan penyensoran token otomatis (`***REDACTED***`).
+  - Pemulihan parsial (Partial sync recovery) saat koneksi terputus di tengah jalan.
+- **Orkestrator Konektor (`app/Services/ConnectorManager.php`):**
+  - Registri driver konektor dengan resolusi dinamis.
+  - Penyelaras katalog otomatis (`syncCatalogToDatabase`) untuk 10 platform digital resmi.
+  - Pengujian konektivitas live (`testConnection`) dan eksekusi batch sinkronisasi inkremental ber-cursor.
+  - Pemutusan sambungan aman (`disconnect`).
+- **Implementasi Driver Konektor Konkret:**
+  - `CustomAPIConnector.php`: Driver REST API universal dengan autentikasi API Key (Bearer / Header) dan paginasi cursor.
+  - `GoogleSheetsConnector.php`: Driver Google Sheets API v4 dengan scope `spreadsheets.readonly` dan row-offset cursor.
+- **Model Data (`app/Models/`):**
+  - `PlatformConnection.php`, `Connector.php`, `SyncJob.php`.
+- **Antarmuka Pengguna Modul Konektor (`resources/views/connectors/`):**
+  - `index.php`: Manajemen koneksi aktif, indikator status live, tombol test koneksi, pemicu sinkronisasi instan, dan katalog 10 platform didukung.
+  - `create.php`: Form penambahan koneksi baru dengan pengaturan interval sync, input kredensial terenkripsi, dan banner keamanan READ-ONLY.
+  - `detail.php`: Dasbor inspeksi mendalam status enkripsi AES-256-GCM, nilai cursor inkremental, tabel riwayat sync, dan live log inspector stream.
+  - `history.php`: Riwayat global audit sinkronisasi lintas seluruh platform terhubung.
+- **Rute Web & REST API (`routes/web.php` & `routes/api.php`):**
+  - Rute web: `/connectors`, `/connectors/create`, `/connectors/history`, `/connectors/{id}`, `/connectors/{id}/settings`, `/connectors/{id}/disconnect`, `/connectors/oauth/authorize/{code}`, `/connectors/oauth/callback`.
+  - REST API: `GET /api/v1/connectors`, `GET /api/v1/connections`, `POST /api/v1/connections`, `GET /api/v1/connections/{id}`, `POST /api/v1/connections/{id}/test`, `POST /api/v1/connections/{id}/sync`, `POST /api/v1/connections/{id}/disconnect`, `GET /api/v1/connections/{id}/history`, `GET /api/v1/connections/logs/{job_id}`.
+- **Automated Test Suite (`tests/Unit/ConnectorFrameworkTest.php`):**
+  - 10 unit & integration test cases mencakup enkripsi credential, deteksi token kadaluarsa, proteksi anti-CSRF state token, pemblokiran SSRF, sensor log sensitif, lifecycle sync queue, resume cursor inkremental, resolusi driver katalog, safe disconnect, dan penegakan READ-ONLY (9/9 test suites lulus 100%).
+
+---
+
 ## [0.4.0-dev] - 2026-11-27 (FASE 3 — Database & Data Explorer)
 
 ### Ditambahkan (Added)

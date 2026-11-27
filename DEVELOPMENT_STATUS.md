@@ -1,7 +1,7 @@
 # Status Pengembangan AnaBot (Development Status)
 
 Terakhir diperbarui: 2026-11-27  
-Fase Saat Ini: **FASE 3 — Selesai (Menunggu Persetujuan Masuk FASE 4)**  
+Fase Saat Ini: **FASE 4 — Selesai (Menunggu Persetujuan Masuk FASE 5)**  
 Status Integritas Data: **Aman (Seluruh Pengujian Menggunakan Database Testing Terisolasi)**
 
 ---
@@ -14,8 +14,8 @@ Status Integritas Data: **Aman (Seluruh Pengujian Menggunakan Database Testing T
 | **FASE 1** | **Core System & Database Engine** | **SELESAI** | Bootstrap, Router, Database PDO SQLite, Auth, Security, Migration runner (`schema_migrations`), Logger, 6/6 test suites lulus. |
 | **FASE 2** | **Dashboard & UI Framework** | **SELESAI** | Layout modern SaaS, responsive desktop & mobile, dark/light mode, Chart.js lokal, 10 menu modul, bento KPI aktual, 7/7 test suites lulus. |
 | **FASE 3** | **Database & Data Explorer** | **SELESAI** | Dataset manager, schema discovery, records browser dengan search/filter/sorting, pagination SQLite, streaming CSV export, 8/8 test suites lulus. |
-| **FASE 4** | **Connector Framework** | *Menunggu Persetujuan* | Interface konektor standar, Credential manager, AES-256-GCM, rate limiter, queue & sync log. |
-| **FASE 5** | **Integrasi Pertama (Google Sheets)** | *Belum Mulai* | OAuth/Service auth Google Sheets, test connection, normalisasi data, incremental sync via SQLite. |
+| **FASE 4** | **Connector Framework** | **SELESAI** | Interface konektor standar, BaseConnector (READ-ONLY), HttpClient (SSRF protection & backoff), CredentialManager (AES-256-GCM), OAuthStateManager, SyncQueueManager (cursor-based), 9/9 test suites lulus. |
+| **FASE 5** | **Integrasi Pertama (Google Sheets)** | *Menunggu Persetujuan* | OAuth/Service auth Google Sheets, test connection, normalisasi data, incremental sync via SQLite. |
 | **FASE 6** | **Analytics Engine (PHP)** | *Belum Mulai* | Mesin statistik deskriptif murni PHP, growth, korelasi, pergerakan tren, audit trail deterministik. |
 | **FASE 7** | **Multi-Provider AI Framework** | *Belum Mulai* | Adapter Gemini, OpenAI, Claude, OpenAI-compatible, usage tracking & budgeting, provider fallback. |
 | **FASE 8** | **AI Analyst** | *Belum Mulai* | Context builder berbasis hasil AnalyticsEngine, chat analitis grounded data, sesi percakapan, rekomendasi. |
@@ -27,26 +27,36 @@ Status Integritas Data: **Aman (Seluruh Pengujian Menggunakan Database Testing T
 
 ---
 
-## 2. Rincian Capaian FASE 3 (Database & Data Explorer)
-- [x] Model akses data SQLite `Dataset`, `DatasetColumn`, dan `DataRecord` di `app/Models/`.
-- [x] Layanan bisnis `DataExplorerService` di `app/Services/DataExplorerService.php` dengan pagination memori aman SQLite (LIMIT/OFFSET).
-- [x] Streaming CSV Generator berbasis PHP `yield` (`streamCsvExport`) dengan konsumsi RAM rendah dan kepatuhan terhadap PHP 8.4 `fputcsv()`.
-- [x] Pencarian teks bebas (full-text search) pada seluruh payload JSON baris data.
-- [x] Penyaringan kolom dinamis (`json_extract`) dan pengurutan dinamis aman (ASC/DESC).
-- [x] Tampilan antarmuka katalog dataset di `resources/views/explorer/datasets.php`.
-- [x] Tampilan penelusuran baris data interaktif dengan toolbar filter & pagination di `resources/views/explorer/records.php`.
-- [x] Tampilan inspeksi skema struktur kolom dan klasifikasi Metrik vs Dimensi di `resources/views/explorer/schema.php`.
-- [x] Controller `DataExplorerController` untuk web dan REST API endpoints (`/data/overview`, `/datasets`, `/records`, `/schema`, `/export`).
-- [x] Seeder data realistis 75 baris transaksi penjualan di `database/seeders/seed_sample_dataset.php`.
-- [x] Pengujian unit otomatis `tests/Unit/DataExplorerTest.php` (8/8 test suites lulus 100%).
+## 2. Rincian Capaian FASE 4 (Connector Framework)
+- [x] Standard Connector Contract & Interface `ConnectorInterface.php` di `app/Connectors/` dengan penegakan mutlak akses **READ-ONLY**.
+- [x] Abstract `BaseConnector.php` dengan request throttling, exponential backoff, penanganan rate-limit HTTP 429, dan sensor otomatis data rahasia.
+- [x] `HttpClient.php` khusus cURL Native PHP 8.4 dengan proteksi SSRF (blokir IP privat RFC1918, link-local, loopback, cloud metadata), batas memori 10MB, dan verifikasi SSL ketat.
+- [x] Layanan `CredentialManager.php` untuk penyimpanan kredensial token terenkripsi AES-256-GCM, deteksi kadaluarsa, rotasi token, dan pencabutan aman saat diputus.
+- [x] Layanan `OAuthStateManager.php` untuk token anti-CSRF 64-karakter hex dengan garansi sekali pakai (single-use) pencegah replay attack.
+- [x] Layanan `SyncQueueManager.php` untuk pelacakan antrean sinkronisasi, persistensi cursor inkremental pada tabel `sync_cursors`, pemulihan parsial (partial sync recovery), dan log audit tersensor pada `sync_logs`.
+- [x] Layanan `ConnectorManager.php` untuk orkestrasi konektor, registrasi driver, sinkronisasi katalog 10 platform digital resmi, dan uji koneksi live.
+- [x] Driver konkret: `CustomAPIConnector.php` (REST API dengan cursor pagination) dan `GoogleSheetsConnector.php` (Google Sheets API v4 read-only).
+- [x] Model data `PlatformConnection.php`, `Connector.php`, `SyncJob.php` di `app/Models/`.
+- [x] Antarmuka manajemen konektor di `resources/views/connectors/`: `index.php` (katalog 10 platform & koneksi aktif), `create.php` (formulir koneksi baru), `detail.php` (status enkripsi, cursor & log stream), dan `history.php` (audit riwayat sync global).
+- [x] Pengontrol web & REST API endpoints (`/connectors`, `/connections`, `/connections/{id}/test`, `/connections/{id}/sync`, `/connections/{id}/disconnect`, `/connections/{id}/history`).
+- [x] Pengujian unit & integrasi otomatis `tests/Unit/ConnectorFrameworkTest.php` (9/9 test suites lulus 100%).
 
 ---
 
-## 3. Rencana Tugas untuk FASE 4 (Connector Framework)
-Setelah pengguna memberikan persetujuan untuk FASE 4:
-1. Pembangunan **Connector Contract & Interface** (`app/Connectors/ConnectorInterface.php`) dengan metode standar: `connect()`, `testConnection()`, `getAvailableDatasets()`, `fetchData()`, `validatePermissions()`, `getNextCursor()`, `disconnect()`.
-2. Pembangunan **Connector Manager** (`app/Services/ConnectorManager.php`) untuk registrasi dan orkestrasi konektor platform.
-3. Pembangunan **Credential Manager**: Penyimpanan dan pembacaan token/kredensial API terenkripsi AES-256-GCM.
-4. Pembangunan **OAuth State Manager**: Penanganan token state CSRF dan alur pertukaran callback OAuth 2.0 aman.
-5. Pembangunan **HTTP Client Engine (cURL)**: Penanganan timeout, batas ukuran payload, rotasi token, dan penanganan rate limit (Exponential Backoff).
-6. Pembangunan **Sync Queue & Logger**: Pengelolaan antrean sinkronisasi bertahap dan pelacakan cursor incremental.
+## 3. Rencana Tugas untuk FASE 5 (Integrasi Pertama: Google Sheets)
+Setelah pengguna memberikan persetujuan untuk FASE 5:
+1. Pembangunan **Google Sheets OAuth 2.0 Client & Service Account Flow**:
+   - Dukungan autentikasi Google OAuth 2.0 (User Consent) & Google Service Account (JSON Key).
+   - Pengambilan metadata spreadsheet (`sheets.get`) dan validasi scope `https://www.googleapis.com/auth/spreadsheets.readonly`.
+2. Pembangunan **Deteksi Skema Otomatis (Auto-Schema Discovery)**:
+   - Pembacaan baris header (Header Row Discovery) dari tab lembar kerja.
+   - Inferensi tipe data otomatis (DATETIME, INTEGER, NUMERIC, TEXT, BOOLEAN) per kolom.
+3. Pembangunan **Pipeline Sinkronisasi & Normalisasi Data Google Sheets**:
+   - Pembacaan range bertahap menggunakan row-offset cursor (`Sheet1!A2:ZZ1000`).
+   - Normalisasi tipe data dan pembersihan nilai kosong/karakter spesial.
+   - Penyimpanan batch atomik ke tabel `data_records` dan pembuatan/pembaruan kolom di `dataset_columns`.
+4. Pembangunan **UI Khusus Konfigurasi Google Sheets**:
+   - Modal/Halaman input ID spreadsheet atau pemilih tab sheet.
+   - Pratinjau 5 baris pertama spreadsheet sebelum konfirmasi impor ke SQLite.
+5. Pembangunan **Pengujian Unit & Integrasi Fase 5**:
+   - Pengujian parsing rentang baris, verifikasi token refresh Google, dan pengujian sinkronisasi inkremental baris baru.
