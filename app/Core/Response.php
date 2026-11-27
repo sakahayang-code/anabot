@@ -42,6 +42,7 @@ class Response
     {
         $payload = [
             'success' => false,
+            'message' => $message,
             'error' => [
                 'code' => $errorCode,
                 'message' => $message,

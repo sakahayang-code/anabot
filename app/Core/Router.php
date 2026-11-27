@@ -109,6 +109,9 @@ class Router
             }
         }
 
+        // Collapse multiple consecutive slashes into one
+        $path = preg_replace('#/+#', '/', $path);
+
         $path = rtrim($path, '/');
         if (empty($path)) {
             $path = '/';

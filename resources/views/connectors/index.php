@@ -246,7 +246,7 @@ function testConnection(connId) {
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Menguji...';
     btn.disabled = true;
 
-    fetch('<?= e(url('/api/v1/connections/')) ?>/' + connId + '/test', {
+    fetch('<?= e(url('/api/v1/connections')) ?>/' + connId + '/test', {
         method: 'POST',
         headers: { 'Accept': 'application/json' }
     })
@@ -261,7 +261,8 @@ function testConnection(connId) {
         } else {
             badge.className = 'badge badge-danger';
             badge.innerText = 'Error';
-            alert('✗ Tes Koneksi Gagal: ' + (data.message || 'Terjadi kesalahan komunikasi.'));
+            const msg = data.message || (data.error && (typeof data.error === 'string' ? data.error : data.error.message)) || 'Terjadi kesalahan komunikasi.';
+            alert('✗ Tes Koneksi Gagal: ' + msg);
         }
     })
     .catch(err => {
@@ -280,7 +281,7 @@ function triggerSync(connId) {
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Sync...';
     btn.disabled = true;
 
-    fetch('<?= e(url('/api/v1/connections/')) ?>/' + connId + '/sync', {
+    fetch('<?= e(url('/api/v1/connections')) ?>/' + connId + '/sync', {
         method: 'POST',
         headers: { 'Accept': 'application/json' }
     })
@@ -294,7 +295,8 @@ function triggerSync(connId) {
             alert('✓ Sinkronisasi Selesai: ' + data.records_processed + ' record diproses (' + data.records_added + ' ditambah, ' + data.records_updated + ' diperbarui) dalam ' + data.duration_seconds + 's.');
             window.location.reload();
         } else {
-            alert('✗ Sinkronisasi Gagal: ' + (data.error || 'Terjadi kesalahan saat sinkronisasi data.'));
+            const msg = data.message || (data.error && (typeof data.error === 'string' ? data.error : data.error.message)) || 'Terjadi kesalahan saat sinkronisasi data.';
+            alert('✗ Sinkronisasi Gagal: ' + msg);
         }
     })
     .catch(err => {

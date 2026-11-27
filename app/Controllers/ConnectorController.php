@@ -152,6 +152,7 @@ class ConnectorController
         $meta = $catalog[$connection['connector_code']] ?? [];
 
         $credMeta = $this->credentialManager->getMetadata($id);
+        $credentials = $this->credentialManager->get($id) ?? [];
         $history = $this->syncQueue->getHistory($id, 15);
         $latestJob = $this->syncQueue->getLatestJob($id);
         $latestLogs = $latestJob ? $this->syncQueue->getJobLogs((int) $latestJob['id']) : [];
@@ -167,6 +168,7 @@ class ConnectorController
             'connection' => $connection,
             'meta' => $meta,
             'credMeta' => $credMeta,
+            'credentials' => $credentials,
             'history' => $history,
             'latestJob' => $latestJob,
             'latestLogs' => $latestLogs,
@@ -180,8 +182,16 @@ class ConnectorController
     public function test(int|array $id): void
     {
         $id = is_array($id) ? (int) ($id['id'] ?? 0) : (int) $id;
-        $result = $this->connectorManager->testConnection($id);
-        Response::json($result);
+        try {
+            $result = $this->connectorManager->testConnection($id);
+            Response::json($result);
+        } catch (\Throwable $e) {
+            Response::json([
+                'success' => false,
+                'message' => 'Gagal menguji koneksi: ' . $e->getMessage(),
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -196,6 +206,7 @@ class ConnectorController
         } catch (\Throwable $e) {
             Response::json([
                 'success' => false,
+                'message' => 'Gagal sinkronisasi data: ' . $e->getMessage(),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -219,11 +230,17 @@ class ConnectorController
     }
 
     /**
-     * Web: Update Connection Settings
+     * Web: Update Connection Settings & Credentials
      */
     public function updateSettings(int|array $id): void
     {
         $id = is_array($id) ? (int) ($id['id'] ?? 0) : (int) $id;
+        $connection = $this->connectionModel->findById($id);
+        if (!$connection) {
+            redirect('/connectors');
+            return;
+        }
+
         $input = $_POST;
         $name = trim($input['name'] ?? '');
         $interval = max(5, (int) ($input['sync_interval_minutes'] ?? 60));
@@ -231,9 +248,36 @@ class ConnectorController
 
         if (!empty($name)) {
             $this->connectionModel->updateSettings($id, $name, $interval, $autoSync);
-            $_SESSION['flash_success'] = "Pengaturan koneksi berhasil diperbarui.";
         }
 
+        // Check if any credentials or configuration parameters were submitted to update
+        $allowedFields = [
+            'api_key', 'access_token', 'refresh_token', 'base_url',
+            'site_url', 'shop_domain', 'property_id', 'ad_account_id', 'advertiser_id', 'channel_id',
+            'consumer_key', 'consumer_secret', 'spreadsheet_id', 'spreadsheet_url', 'service_account_json',
+            'host', 'port', 'database', 'username', 'password', 'charset',
+        ];
+
+        $currentCreds = $this->credentialManager->get($id) ?? [];
+        $hasCredUpdate = false;
+
+        foreach ($allowedFields as $field) {
+            if (isset($input[$field]) && $input[$field] !== '') {
+                $currentCreds[$field] = is_string($input[$field]) ? trim($input[$field]) : $input[$field];
+                $hasCredUpdate = true;
+            }
+        }
+
+        if ($hasCredUpdate) {
+            $tokenType = match ($connection['auth_type'] ?? '') {
+                'database' => 'Database',
+                'api_key'  => (!empty($currentCreds['consumer_key']) ? 'Basic' : 'ApiKey'),
+                default    => 'Bearer',
+            };
+            $this->credentialManager->store($id, $currentCreds, $tokenType);
+        }
+
+        $_SESSION['flash_success'] = "Pengaturan dan kredensial koneksi berhasil diperbarui.";
         redirect("/connectors/{$id}");
     }
 

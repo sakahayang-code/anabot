@@ -23,12 +23,15 @@ declare(strict_types=1);
         (function() {
             const originalFetch = window.fetch;
             window.fetch = function(resource, init) {
-                if (typeof resource === 'string' && resource.startsWith('/')) {
-                    const base = window.ANABOT_BASE_URL;
-                    const basePath = new URL(base, window.location.origin).pathname.replace(/\/+$/, '');
-                    if (basePath && !resource.startsWith(basePath + '/')) {
-                        resource = basePath + resource;
+                if (typeof resource === 'string') {
+                    if (resource.startsWith('/')) {
+                        const base = window.ANABOT_BASE_URL;
+                        const basePath = new URL(base, window.location.origin).pathname.replace(/\/+$/, '');
+                        if (basePath && !resource.startsWith(basePath + '/')) {
+                            resource = basePath + resource;
+                        }
                     }
+                    resource = resource.replace(/([^:])\/{2,}/g, '$1/');
                 }
                 return originalFetch.call(this, resource, init);
             };

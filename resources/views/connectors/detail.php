@@ -195,6 +195,32 @@ $statusBadge = match ($connection['status']) {
                     </select>
                 </div>
 
+                <?php if ($connection['connector_code'] === 'google_sheets'): ?>
+                    <div style="border-top: 1px solid var(--border-color); margin: 12px 0 10px 0; padding-top: 10px;">
+                        <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 8px;">Kredensial & Sumber Dokumen</span>
+                        
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Spreadsheet ID atau URL Dokumen *</label>
+                            <input type="text" name="spreadsheet_id" class="form-control" value="<?= e($credentials['spreadsheet_id'] ?? $credentials['spreadsheet_url'] ?? '') ?>" placeholder="https://docs.google.com/spreadsheets/d/... atau kode ID" style="width: 100%; padding: 6px 10px; background: var(--bg-surface-soft); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 0.8125rem; font-family: monospace;">
+                        </div>
+
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Google Service Account JSON</label>
+                            <textarea name="service_account_json" class="form-control" rows="3" placeholder="<?= !empty($credentials['service_account_json']) ? '(Kunci Service Account terpasang — kosongkan jika tidak ingin mengubah)' : 'Tempelkan isi file JSON kunci Service Account' ?>" style="width: 100%; padding: 6px 10px; background: var(--bg-surface-soft); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 0.75rem; font-family: monospace;"></textarea>
+                        </div>
+
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Google Cloud API Key (Spreadsheet Publik)</label>
+                            <input type="password" name="api_key" class="form-control" placeholder="<?= !empty($credentials['api_key']) ? '(API Key tersimpan — kosongkan jika tidak diubah)' : 'AIzaSy...' ?>" style="width: 100%; padding: 6px 10px; background: var(--bg-surface-soft); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 0.8125rem; font-family: monospace;">
+                        </div>
+
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">OAuth Access Token (Alternatif)</label>
+                            <input type="password" name="access_token" class="form-control" placeholder="<?= !empty($credentials['access_token']) ? '(Access Token tersimpan — kosongkan jika tidak diubah)' : 'ya29.a0AfH6SM...' ?>" style="width: 100%; padding: 6px 10px; background: var(--bg-surface-soft); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 0.8125rem; font-family: monospace;">
+                        </div>
+                    </div>
+                <?php endif; ?>
+
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
                     <label style="font-size: 0.75rem; color: var(--text-main); display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
                         <input type="checkbox" name="auto_sync_enabled" value="1" <?= $connection['auto_sync_enabled'] ? 'checked' : '' ?> style="accent-color: var(--brand-primary);">
@@ -328,7 +354,7 @@ function testConnection(connId) {
     btn.innerHTML = 'Menguji...';
     btn.disabled = true;
 
-    fetch('<?= e(url('/api/v1/connections/')) ?>/' + connId + '/test', {
+    fetch('<?= e(url('/api/v1/connections')) ?>/' + connId + '/test', {
         method: 'POST',
         headers: { 'Accept': 'application/json' }
     })
@@ -343,7 +369,8 @@ function testConnection(connId) {
         } else {
             badge.className = 'badge badge-danger';
             badge.innerText = 'Error';
-            alert('✗ Tes Gagal: ' + (data.message || 'Gagal tersambung.'));
+            const msg = data.message || (data.error && (typeof data.error === 'string' ? data.error : data.error.message)) || 'Gagal tersambung.';
+            alert('✗ Tes Gagal: ' + msg);
         }
     })
     .catch(err => {
@@ -359,7 +386,7 @@ function triggerSync(connId) {
     btn.innerHTML = 'Sinkronisasi...';
     btn.disabled = true;
 
-    fetch('<?= e(url('/api/v1/connections/')) ?>/' + connId + '/sync', {
+    fetch('<?= e(url('/api/v1/connections')) ?>/' + connId + '/sync', {
         method: 'POST',
         headers: { 'Accept': 'application/json' }
     })
@@ -371,7 +398,8 @@ function triggerSync(connId) {
             alert('✓ Sinkronisasi Selesai: ' + data.records_processed + ' record diproses (' + data.records_added + ' ditambah, ' + data.records_updated + ' diperbarui) dalam ' + data.duration_seconds + 's.');
             window.location.reload();
         } else {
-            alert('✗ Gagal: ' + (data.error || 'Terjadi kesalahan.'));
+            const msg = data.message || (data.error && (typeof data.error === 'string' ? data.error : data.error.message)) || 'Terjadi kesalahan saat sinkronisasi.';
+            alert('✗ Gagal: ' + msg);
         }
     })
     .catch(err => {
@@ -389,7 +417,7 @@ function showJobLogs(jobId) {
     body.innerHTML = 'Memuat log...';
     modal.style.display = 'flex';
 
-    fetch('<?= e(url('/api/v1/connections/logs/')) ?>/' + jobId)
+    fetch('<?= e(url('/api/v1/connections/logs')) ?>/' + jobId)
     .then(r => r.json())
     .then(res => {
         if (!res.data || res.data.length === 0) {

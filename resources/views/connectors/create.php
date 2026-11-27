@@ -171,6 +171,34 @@ $currentCode = $selectedCode ?? 'custom_api';
                             <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">TikTok Marketing API Access Token *</label>
                             <input type="password" name="access_token" class="form-control" required placeholder="Access-Token..." style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
                         </div>
+                    <?php elseif ($currentCode === 'google_sheets'): ?>
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">
+                                Spreadsheet ID atau URL Google Sheets *
+                            </label>
+                            <input type="text" name="spreadsheet_id" class="form-control" required placeholder="Contoh: https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit atau ID acak" style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                            <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 4px;">Anda dapat menempelkan URL lengkap dokumen spreadsheet dari browser atau kode ID-nya.</small>
+                        </div>
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">
+                                Google Service Account JSON (Sangat Disarankan untuk Shared Hosting)
+                            </label>
+                            <textarea name="service_account_json" class="form-control" rows="4" placeholder='{"type": "service_account", "project_id": "...", "private_key": "...", "client_email": "..."}' style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace; font-size: 0.75rem;"></textarea>
+                            <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 4px;">Tempelkan seluruh isi file JSON kunci Service Account dari Google Cloud. Jangan lupa beri akses 'Viewer' ke email Service Account pada Google Sheet Anda.</small>
+                        </div>
+                        <div style="margin-bottom: 14px;">
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">
+                                Access Token / OAuth Token (Alternatif jika tidak menggunakan Service Account)
+                            </label>
+                            <input type="password" name="access_token" class="form-control" placeholder="ya29.a0AfH6SM..." style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">
+                                Google Cloud API Key (Alternatif untuk Spreadsheet Publik / Anyone with link)
+                            </label>
+                            <input type="password" name="api_key" class="form-control" placeholder="AIzaSy..." style="width: 100%; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-family: monospace;">
+                            <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 4px;">Jika sheet dapat diakses oleh siapa saja dengan tautan (Viewer), Google Cloud API Key (AIzaSy...) cukup untuk membaca data.</small>
+                        </div>
                     <?php elseif ($connector['auth_type'] === 'oauth2'): ?>
                         <div style="margin-bottom: 14px;">
                             <label style="display: block; font-size: 0.8125rem; font-weight: 500; color: var(--text-main); margin-bottom: 6px;">

@@ -49,7 +49,7 @@ class GoogleSheetsConnector extends BaseConnector
         if (empty($spreadsheetId)) {
             return [
                 'success' => false,
-                'message' => 'Spreadsheet ID atau URL wajib diisi.',
+                'message' => 'Spreadsheet ID atau URL dokumen belum diisi. Silakan masukkan di formulir pengaturan koneksi.',
                 'details' => ['error' => 'MISSING_SPREADSHEET_ID'],
             ];
         }
@@ -59,7 +59,7 @@ class GoogleSheetsConnector extends BaseConnector
             if (empty($token)) {
                 return [
                     'success' => false,
-                    'message' => 'Kredensial Google OAuth atau Service Account belum dikonfigurasi.',
+                    'message' => 'Kredensial belum dikonfigurasi. Masukkan Service Account JSON atau Google API Key / Access Token.',
                     'details' => ['error' => 'MISSING_CREDENTIALS'],
                 ];
             }
@@ -390,7 +390,11 @@ class GoogleSheetsConnector extends BaseConnector
     {
         $headers = ['Accept: application/json'];
         if (!empty($token)) {
-            $headers[] = "Authorization: Bearer {$token}";
+            if (str_starts_with($token, 'AIzaSy')) {
+                $headers[] = "X-Goog-Api-Key: {$token}";
+            } else {
+                $headers[] = "Authorization: Bearer {$token}";
+            }
         }
         return $headers;
     }
