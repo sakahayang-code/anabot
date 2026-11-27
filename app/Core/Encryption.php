@@ -31,8 +31,37 @@ class Encryption
         }
 
         if (empty($resolvedKey)) {
-            // In testing or bootstrap, check fallback env or error
+            // In testing or bootstrap, check fallback env
             $resolvedKey = (string) env('APP_KEY', '');
+        }
+
+        // Automatic persistent fallback for shared hosting if APP_KEY not yet configured in .env
+        if (empty($resolvedKey)) {
+            $storageKeyFile = dirname(__DIR__, 2) . '/storage/encryption.key';
+            if (file_exists($storageKeyFile)) {
+                $resolvedKey = trim((string) file_get_contents($storageKeyFile));
+            } else {
+                $resolvedKey = bin2hex(random_bytes(32));
+                @file_put_contents($storageKeyFile, $resolvedKey);
+
+                // Update .env file if available
+                $envFile = dirname(__DIR__, 2) . '/.env';
+                if (file_exists($envFile)) {
+                    $envContent = (string) file_get_contents($envFile);
+                    if (str_contains($envContent, 'APP_KEY=')) {
+                        $envContent = preg_replace('/APP_KEY=([^\r\n]*)/', 'APP_KEY=' . $resolvedKey, $envContent);
+                    } else {
+                        $envContent .= PHP_EOL . 'APP_KEY=' . $resolvedKey . PHP_EOL;
+                    }
+                    @file_put_contents($envFile, $envContent);
+                }
+            }
+
+            if (!empty($resolvedKey)) {
+                putenv("APP_KEY={$resolvedKey}");
+                $_ENV['APP_KEY'] = $resolvedKey;
+                $_SERVER['APP_KEY'] = $resolvedKey;
+            }
         }
 
         if (empty($resolvedKey)) {

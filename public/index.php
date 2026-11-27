@@ -23,6 +23,13 @@ try {
         $randomKey = bin2hex(random_bytes(32));
         $envContent = preg_replace('/APP_KEY=.*/', 'APP_KEY=' . $randomKey, $envContent);
         @file_put_contents($envPath, $envContent);
+    } elseif (file_exists($envPath)) {
+        $envContent = (string) file_get_contents($envPath);
+        if (preg_match('/^APP_KEY=\s*$/m', $envContent)) {
+            $randomKey = bin2hex(random_bytes(32));
+            $envContent = preg_replace('/^APP_KEY=\s*$/m', 'APP_KEY=' . $randomKey, $envContent);
+            @file_put_contents($envPath, $envContent);
+        }
     }
 
     // 3. Load Environment Variables
