@@ -22,13 +22,18 @@ if ($appEnv === 'testing') {
     }
 }
 
+$configuredDb = (string) env('DB_DATABASE', $defaultDb);
+if ($configuredDb !== ':memory:' && !str_starts_with($configuredDb, '/')) {
+    $configuredDb = dirname(__DIR__) . '/' . $configuredDb;
+}
+
 return [
     'default' => 'sqlite',
 
     'connections' => [
         'sqlite' => [
             'driver' => 'sqlite',
-            'database' => env('DB_DATABASE', $defaultDb),
+            'database' => $configuredDb,
             'foreign_keys' => (bool) env('DB_FOREIGN_KEYS', true),
             'busy_timeout' => (int) env('DB_BUSY_TIMEOUT', 5000),
             'journal_mode' => env('DB_JOURNAL_MODE', 'WAL'), // WAL with fallback to TRUNCATE/DELETE

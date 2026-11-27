@@ -2,6 +2,38 @@
 
 Seluruh perubahan penting pada proyek AnaBot dicatat dalam dokumen ini. Format mengikuti standar [Keep a Changelog](https://keepachangelog.com/id/1.0.0/).
 
+## [0.10.0-dev] - 2026-11-27 (FASE 9 — Predictive Analytics & Anomaly Detection)
+
+### Ditambahkan (Added)
+- **Mesin Deteksi Anomali Matematis Murni (`app/Services/AnomalyDetector.php`):**
+  - Deteksi outlier berbasis Interquartile Range (IQR) John Tukey: pemisahan pagar dalam ($1.5 \times IQR$, *mild anomaly*) dan pagar luar ($3.0 \times IQR$, *extreme anomaly*).
+  - Deteksi deviasi terstandarisasi Z-Score ($z = \frac{x - \mu}{\sigma}$) dengan Bessel's sample correction $n-1$ serta proteksi varians nol ($\sigma = 0$).
+  - Deteksi pergeseran tajam sekuensial (*sudden shifts*) pada deret waktu: identifikasi lonjakan mendadak (*sudden spike*) dan penurunan tajam (*steep drop*).
+  - Analisis anomali dataset komprehensif (`detectDatasetAnomalies`) yang mengintegrasikan metode IQR, Z-Score, dan sudden shifts dengan penentuan tingkat risiko dataset (`LOW`, `MODERATE`, `CRITICAL`).
+  - Persistensi deterministik ke tabel `analysis_results` dengan tipe `anomaly_detection`.
+- **Mesin Proyeksi & Peramalan Deterministik (`app/Services/ForecastEngine.php`):**
+  - Proyeksi tren linear Ordinary Least Squares (OLS) dengan evaluasi $R^2$ dan gradien tren.
+  - Interval Kepercayaan 95% (*95% Confidence Intervals*) berbasis galat baku prediksi ($SE_{pred}$) dengan dekomposisi varians residual dan jarak dari rata-rata historis.
+  - Holt's Linear Exponential Smoothing (Double Exponential Smoothing) dengan pembaruan dinamis level $\alpha$ dan tren $\beta$ untuk menangani deret waktu bervariasi.
+  - Proyeksi Simple Moving Average (SMA) sebagai alternatif proyeksi jangka pendek adaptif.
+  - Evaluasi akurasi backtesting peramalan: Mean Absolute Percentage Error (MAPE %) dan Root Mean Square Error (RMSE).
+  - Penegakan klausul disclaimer mutlak: mewajibkan pernyataan tertulis bahwa proyeksi dihasilkan secara matematis murni dengan asumsi kondisi historis berlanjut dan bukan jaminan masa depan.
+  - Persistensi deterministik ke tabel `analysis_results` dengan tipe `forecast_projection`.
+- **Pengontrol Web & REST API Predictive Analytics (`app/Controllers/PredictiveController.php`):**
+  - Web views: `predictivePage` (`/analytics/predictive`, `/analytics/forecast`, `/analytics/anomalies`, `/predictions`).
+  - REST API Endpoints:
+    - `GET /api/v1/analytics/datasets/{id}/anomalies`: Eksekusi deteksi anomali matematis lengkap, batas IQR, deviasi Z-score, dan ringkasan risiko.
+    - `GET /api/v1/analytics/datasets/{id}/forecast`: Eksekusi proyeksi multi-metode (OLS, Holt, SMA) dengan interval kepercayaan 95% dan metrik akurasi.
+    - `POST /api/v1/analytics/datasets/{id}/interpret-predictive`: Interpretasi AI berbasis fakta matematis aktual (analisis anomali & proyeksi masa depan).
+- **Antarmuka Interaktif Visual Forecaster & Anomaly Studio (`resources/views/analytics/predictive.php`):**
+  - Visualisasi grafik Chart.js multi-lapisan: garis aktual historis, garis proyeksi terputus-putus (*dashed line*), area arsiran interval kepercayaan 95% (*shaded confidence band*), dan titik anomali berkedip merah/kuning (*glowing warning dots*).
+  - Bento KPI Cards instan: Skor Tingkat Risiko (*Risk Level*), Nilai Proyeksi Target, Rentang Batas 95% Confidence, dan Akurasi Model (MAPE/RMSE).
+  - Tabel rincian anomali interaktif dengan badge klasifikasi keparahan (*Mild Outlier*, *Extreme Outlier*, *Sudden Spike*, *Steep Drop*).
+  - Panel AI Predictive Advisory: Interpretasi on-demand yang terikat kuat pada data komputasi murni tanpa halusinasi.
+- **Automated Test Suite Fase 9 (`tests/Unit/PredictiveAnalyticsTest.php`):**
+  - 10 skenario pengujian matematis komprehensif (IQR fences, Z-score zero-variance protection, sudden shifts, unified risk leveling, OLS projection exactness, 95% CI math bounds, Holt's smoothing formulas, SMA forecast, backtesting MAPE/RMSE, deterministik DB persistence).
+  - Seluruh 14/14 automated test suites AnaBot lulus 100%.
+
 ---
 
 ## [0.9.0-dev] - 2026-11-27 (FASE 8 — AI Analyst & Grounded Conversational Intelligence)

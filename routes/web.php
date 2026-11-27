@@ -66,32 +66,11 @@ $router->group(['middleware' => ['auth']], function (Router $auth) {
     $auth->get('/analytics/comparison', [\AnaBot\Controllers\AnalyticsController::class, 'comparisonPage']);
     $auth->get('/analytics/comparison/{id}', [\AnaBot\Controllers\AnalyticsController::class, 'comparisonPage']);
 
-    // Anomaly Detection (Scheduled for Phase 9)
-
-    $auth->get('/analytics/anomalies', function () {
-        (new ModulePlaceholderController())->show(
-            'Analytics - Anomaly Detection',
-            9,
-            'Deteksi dini data tidak wajar menggunakan metode statistik IQR dan Z-score.',
-            [
-                ['title' => 'Metode Z-Score', 'desc' => 'Mendeteksi deviasi ekstrim dari rata-rata distribusi data.'],
-                ['title' => 'Metode IQR (Tukey)', 'desc' => 'Deteksi outlier yang tahan terhadap nilai ekstrim (robust outlier detection).']
-            ]
-        );
-    });
-
-    // 6. Predictions (Roadmap Phase 9)
-    $auth->get('/predictions', function () {
-        (new ModulePlaceholderController())->show(
-            'Predictive Analytics',
-            9,
-            'Peramalan tren masa depan berdasarkan time series dengan asumsi dan rentang kepercayaan eksplisit.',
-            [
-                ['title' => 'Exponential Smoothing', 'desc' => 'Proyeksi tren periode berikutnya berdasarkan data historis.'],
-                ['title' => 'Indikator Kepercayaan', 'desc' => 'Transparansi keterbatasan model prediksi tanpa klaim kepastian mutlak.']
-            ]
-        );
-    });
+    // 5. Predictive Analytics & Anomaly Detection (Active Phase 9)
+    $auth->get('/analytics/predictive', [\AnaBot\Controllers\PredictiveController::class, 'predictivePage']);
+    $auth->get('/analytics/forecast', [\AnaBot\Controllers\PredictiveController::class, 'predictivePage']);
+    $auth->get('/analytics/anomalies', [\AnaBot\Controllers\PredictiveController::class, 'predictivePage']);
+    $auth->get('/predictions', [\AnaBot\Controllers\PredictiveController::class, 'predictivePage']);
 
     // 7. Reports (Roadmap Phase 10)
     $auth->get('/reports', function () {

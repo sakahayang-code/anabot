@@ -81,6 +81,14 @@ class AnalysisResult
     }
 
     /**
+     * Find latest result by dataset, metric, and type (alias of find).
+     */
+    public static function findLatest(int $datasetId, string $metricName, string $analysisType): ?array
+    {
+        return self::find($datasetId, $metricName, $analysisType);
+    }
+
+    /**
      * Get all results for a dataset.
      */
     public static function getByDataset(int $datasetId): array

@@ -71,6 +71,11 @@ $router->group(['prefix' => '/api/v1'], function (Router $api) {
         $authApi->get('/analytics/datasets/{id}/breakdown', [\AnaBot\Controllers\AnalyticsController::class, 'breakdownApi']);
         $authApi->post('/analytics/datasets/{id}/recalculate', [\AnaBot\Controllers\AnalyticsController::class, 'recalculateApi']);
 
+        // Predictive Analytics & Anomaly Endpoints (Phase 9)
+        $authApi->get('/analytics/datasets/{id}/anomalies', [\AnaBot\Controllers\PredictiveController::class, 'anomaliesApi']);
+        $authApi->get('/analytics/datasets/{id}/forecast', [\AnaBot\Controllers\PredictiveController::class, 'forecastApi']);
+        $authApi->post('/analytics/datasets/{id}/interpret-predictive', [\AnaBot\Controllers\PredictiveController::class, 'interpretPredictiveApi']);
+
         // Multi-Provider AI Framework Endpoints (Phase 7)
         $authApi->get('/ai/providers', [\AnaBot\Controllers\AIController::class, 'providersApi']);
         $authApi->post('/ai/providers/{id}', [\AnaBot\Controllers\AIController::class, 'updateProviderApi']);
