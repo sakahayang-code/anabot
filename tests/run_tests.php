@@ -1,0 +1,68 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * AnaBot Automated Test Runner (Isolated Testing Environment)
+ * 
+ * Strict Rule 5.6: Automated tests NEVER touch production database!
+ */
+
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+// Force testing environment
+$_ENV['APP_ENV'] = 'testing';
+$_SERVER['APP_ENV'] = 'testing';
+putenv('APP_ENV=testing');
+
+$_ENV['APP_KEY'] = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+$_SERVER['APP_KEY'] = $_ENV['APP_KEY'];
+putenv("APP_KEY={$_ENV['APP_KEY']}");
+
+use AnaBot\Core\App;
+use AnaBot\Tests\Unit\DatabaseTest;
+use AnaBot\Tests\Unit\EncryptionTest;
+use AnaBot\Tests\Unit\ValidatorTest;
+use AnaBot\Tests\Unit\RouterTest;
+use AnaBot\Tests\Unit\MigrationTest;
+use AnaBot\Tests\Unit\AuthTest;
+
+$app = App::getInstance()->boot();
+
+echo "========================================================" . PHP_EOL;
+echo "  ANABOT CORE SYSTEM AUTOMATED TEST SUITE (FASE 1)" . PHP_EOL;
+echo "  PHP: " . PHP_VERSION . " | Environment: TESTING" . PHP_EOL;
+echo "========================================================" . PHP_EOL . PHP_EOL;
+
+$suites = [
+    'Encryption Service' => new EncryptionTest(),
+    'Database Engine' => new DatabaseTest(),
+    'Input Validator' => new ValidatorTest(),
+    'Router & Dispatcher' => new RouterTest(),
+    'Migration Runner & Schema' => new MigrationTest(),
+    'Authentication & Security' => new AuthTest(),
+];
+
+$passedSuites = 0;
+$totalSuites = count($suites);
+
+foreach ($suites as $name => $suite) {
+    try {
+        $suite->run();
+        $passedSuites++;
+        echo PHP_EOL;
+    } catch (\Throwable $e) {
+        echo "  [FAIL] Test suite failed: " . $e->getMessage() . PHP_EOL;
+        echo "  In " . $e->getFile() . " line " . $e->getLine() . PHP_EOL;
+        echo PHP_EOL;
+    }
+}
+
+echo "========================================================" . PHP_EOL;
+echo "  FINAL TEST RESULT: {$passedSuites}/{$totalSuites} TEST SUITES PASSED" . PHP_EOL;
+echo "========================================================" . PHP_EOL;
+
+if ($passedSuites === $totalSuites) {
+    exit(0);
+} else {
+    exit(1);
+}

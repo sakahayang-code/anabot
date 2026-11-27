@@ -1,8 +1,8 @@
 # Status Pengembangan AnaBot (Development Status)
 
 Terakhir diperbarui: 2026-11-27  
-Fase Saat Ini: **FASE 0 — Selesai (Menunggu Persetujuan Masuk FASE 1)**  
-Status Integritas Data: **Aman (Tidak Ada Modifikasi Database Produksi)**
+Fase Saat Ini: **FASE 1 — Selesai (Menunggu Persetujuan Masuk FASE 2)**  
+Status Integritas Data: **Aman (Seluruh Pengujian Menggunakan Database Testing Terisolasi)**
 
 ---
 
@@ -11,8 +11,8 @@ Status Integritas Data: **Aman (Tidak Ada Modifikasi Database Produksi)**
 | Fase | Nama Fase | Status | Keterangan |
 | :---: | :--- | :---: | :--- |
 | **FASE 0** | **Pemeriksaan Lingkungan & Perencanaan** | **SELESAI** | Runtime PHP 8.4, arsitektur, skema DB, mitigasi risiko, skeleton direktori, dan dokumentasi lengkap. |
-| **FASE 1** | **Core System & Database Engine** | *Menunggu Persetujuan* | Bootstrap, Router, Database PDO SQLite, Auth, Security, Migration runner (`schema_migrations`), Logger. |
-| **FASE 2** | **Dashboard & UI Framework** | *Belum Mulai* | Layout modern SaaS, responsive desktop & mobile, dark/light mode, Chart components, placeholder DEMO jelas. |
+| **FASE 1** | **Core System & Database Engine** | **SELESAI** | Bootstrap, Router, Database PDO SQLite, Auth, Security, Migration runner (`schema_migrations`), Logger, 6/6 test suites lulus. |
+| **FASE 2** | **Dashboard & UI Framework** | *Menunggu Persetujuan* | Layout modern SaaS, responsive desktop & mobile, dark/light mode, Chart components, placeholder DEMO jelas. |
 | **FASE 3** | **Database & Data Explorer** | *Belum Mulai* | Dataset manager, schema discovery, data records browser, search, filter, pagination, streaming CSV export. |
 | **FASE 4** | **Connector Framework** | *Belum Mulai* | Interface konektor standar, Credential manager, AES-256-GCM, rate limiter, queue & sync log. |
 | **FASE 5** | **Integrasi Pertama (Google Sheets)** | *Belum Mulai* | OAuth/Service auth Google Sheets, test connection, normalisasi data, incremental sync via SQLite. |
@@ -27,33 +27,29 @@ Status Integritas Data: **Aman (Tidak Ada Modifikasi Database Produksi)**
 
 ---
 
-## 2. Rincian Capaian FASE 0
-- [x] Audit ketersediaan PHP 8.4 (Terpasang PHP 8.4.28).
-- [x] Audit PDO SQLite & SQLite 3 (Library v3.45.1).
-- [x] Audit ekstensi PHP: cURL, OpenSSL, JSON, mbstring, bcmath, intl, zip.
-- [x] Audit CLI Cron & runtime CLI environment.
-- [x] Penyusunan Dokumen Arsitektur Teknis (`docs/ARCHITECTURE.md`).
-- [x] Penyusunan Analisis Risiko Shared Hosting & Mitigasi (`docs/RISK_ASSESSMENT.md`).
-- [x] Desain detail Skema Database 28 Tabel Inti (`DATABASE_SCHEMA.md`).
-- [x] Penyusunan Prosedur Backup & Restore Konsisten (`BACKUP_RESTORE.md`).
-- [x] Penyusunan Panduan Deployment & Pemisahan Fisik Data (`DEPLOYMENT.md`).
-- [x] Penyusunan Spesifikasi Internal REST API `/api/v1/` (`API_DOCUMENTATION.md`).
-- [x] Pembuatan hierarki folder direktori skeleton lengkap proyek AnaBot.
-- [x] Konfigurasi `.gitignore` ketat untuk perlindungan database produksi, keys, dan log.
-- [x] Konfigurasi template `.env.example`.
-- [x] Inisialisasi Composer PSR-4 autoloader (`AnaBot\`).
+## 2. Rincian Capaian FASE 1 (Core System)
+- [x] Inisialisasi bootstrap aplikasi, DI container, dan session manager di `app/Core/App.php`.
+- [x] Koneksi aman PDO SQLite di `app/Core/Database.php` (`foreign_keys = ON`, `busy_timeout = 5000`, `journal_mode = WAL` dengan fallback aman).
+- [x] Enkripsi dua arah kredensial API berbasis AES-256-GCM di `app/Core/Encryption.php`.
+- [x] Pencatatan aktivitas dengan penyensoran token/password otomatis di `app/Core/Logger.php`.
+- [x] Router cepat berbasis regex dengan grouping prefix, parameter dinamis, dan middleware di `app/Core/Router.php`.
+- [x] Autentikasi sesi single-user dengan hashing BCrypt, login throttling (max 5 percobaan / lockout 15 menit), dan audit logs di `app/Core/Auth.php`.
+- [x] Validasi input dan proteksi CSRF di `app/Core/Validator.php`.
+- [x] Standarisasi respons envelope JSON dan rendering view di `app/Core/Response.php`.
+- [x] Migration runner berurutan dengan pre-migration backup dan checksum SHA-256 di `app/Core/MigrationRunner.php`.
+- [x] Pembuatan 3 migrasi baseline yang meng-cover seluruh 28 tabel inti di `database/migrations/`.
+- [x] Pembuatan front controller di `public/index.php` dan proteksi di `public/.htaccess`.
+- [x] CLI migration tool `database/migrate.php` dan seeder akun `database/seeders/create_user.php`.
+- [x] Endpoint Web & REST API `/api/v1/health`, `/api/v1/auth/login`, `/api/v1/auth/logout`, `/api/v1/auth/me`, `/api/v1/auth/change-password`.
+- [x] Pengujian otomatis 6/6 test suites lulus 100% di `tests/run_tests.php`.
 
 ---
 
-## 3. Daftar Tugas Siap Eksekusi untuk FASE 1 (Core System)
-Ketika pengguna memberikan persetujuan untuk FASE 1, modul-modul berikut akan dibangun secara modular dan diuji:
-1. `app/Core/App.php` — Inisialisasi aplikasi, manajemen lifecycle, dependency injection ringkas.
-2. `app/Core/Router.php` — Router URI clean dengan routing web dan api, parameter binding, middleware dispatch.
-3. `app/Core/Database.php` — Pengelola koneksi PDO SQLite aman (WAL mode, busy timeout 5000ms, foreign keys ON, fallback handler).
-4. `app/Core/Auth.php` — Session-based authentication single user, password hashing (`password_hash`), login throttling, timeout session.
-5. `app/Core/Validator.php` — Validasi input ketat (tipe, regex, sanitasi, panjang karakter).
-6. `app/Core/Encryption.php` — Enkripsi & dekripsi dua arah AES-256-GCM OpenSSL untuk kredensial API.
-7. `app/Core/Logger.php` — Logging terstruktur (INFO, WARNING, ERROR) dengan rotasi harian dan masking token otomatis.
-8. `app/Core/Response.php` — Standarisasi output HTTP JSON envelope dan template HTML rendering.
-9. `database/migrations/` & Migration Engine — Pelaksana migrasi database berurutan dengan tabel `schema_migrations`, tracking batch, dan SHA-256 checksum.
-10. `tests/Unit/CoreTest.php` — Pengujian unit komprehensif untuk enkripsi, router, database connection, migrasi, dan autentikasi.
+## 3. Rencana Tugas untuk FASE 2 (Dashboard & UI Framework)
+Setelah pengguna memberikan persetujuan untuk FASE 2:
+1. Pembangunan master layout responsif modern SaaS (`resources/views/layouts/main.php`).
+2. Pembangunan sidebar navigasi hierarkis (Dashboard, AI Analyst, Data Sources, Data Explorer, Analytics, Predictions, Reports, Automation, AI Management, Settings).
+3. Pembangunan header interaktif (Profil single-user, status konektivitas, dark/light theme switcher).
+4. Pembangunan kartu metrik ringkasan (Total platform terhubung, total dataset, total records, status sync terakhir, estimasi biaya AI).
+5. Integrasi grafik visual interaktif berbasis library JavaScript modern (ringan & cepat tanpa dependensi berat).
+6. Penandaan transparan komponen data demo dengan badge `DEMO` sesuai aturan 1.12 dan 1.13.

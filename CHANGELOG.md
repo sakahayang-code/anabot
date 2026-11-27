@@ -4,6 +4,48 @@ Seluruh perubahan penting pada proyek AnaBot dicatat dalam dokumen ini. Format m
 
 ---
 
+## [0.2.0-dev] - 2026-11-27 (FASE 1 — Core System)
+
+### Ditambahkan (Added)
+- **Bootstrap Aplikasi & Service Container (`app/Core/App.php`):**
+  - Inisialisasi runtime, manajemen session berkonfigurasi aman (`HttpOnly`, `SameSite=Lax`, `Secure`), dan service container singleton.
+  - Global error handler & exception handler dengan proteksi kebocoran stack trace di mode produksi dan audit logging.
+- **Database Engine PDO SQLite (`app/Core/Database.php`):**
+  - Koneksi aman PDO SQLite dengan `PRAGMA foreign_keys = ON;`, `PRAGMA busy_timeout = 5000;`, dan `PRAGMA journal_mode = WAL;` (dengan fallback otomatis ke `TRUNCATE` jika filesystem tidak mendukung WAL).
+  - Wrapper transaksi atomik (`transaction()`) dan snapshot backup konsisten atomik via `VACUUM INTO`.
+  - Proteksi Rule 5.1: Mencegah pembuatan otomatis database kosong di lingkungan produksi jika database tidak ditemukan.
+- **Layanan Enkripsi Kredensial (`app/Core/Encryption.php`):**
+  - Enkripsi dan dekripsi dua arah **AES-256-GCM** via OpenSSL dengan IV unik per entri dan 128-bit authentication tag untuk deteksi tampering.
+- **Structured Logger & Masking (`app/Core/Logger.php`):**
+  - Rotasi log harian (`anabot_YYYY-MM-DD.log`) dengan penyaringan dan penyensoran token/password otomatis.
+- **Router Modular & Fast Dispatcher (`app/Core/Router.php`):**
+  - Routing clean URL untuk metode GET, POST, PATCH, DELETE, grouping prefix (`/api/v1`), middleware chaining (`auth`, `guest`, `csrf`), dan parameter dinamis `{id}`.
+- **Autentikasi Single-User & Throttling (`app/Core/Auth.php`):**
+  - Autentikasi berbasis session cookie aman dengan hashing `password_hash` (BCrypt cost 12) dan verifikasi `password_verify`.
+  - Brute-force throttling: Pelacakan percobaan gagal (maksimal 5 kali) dan penguncian akun sementara selama 15 menit.
+  - Audit log otomatis untuk event login berhasil, login gagal, akun terkunci, dan perubahan password.
+- **Input Validator & CSRF (`app/Core/Validator.php`):**
+  - Aturan validasi input: `required`, `email`, `min`, `max`, `numeric`, `integer`, `in`, `same`, dan `csrf`.
+- **Response Helper (`app/Core/Response.php`):**
+  - Standarisasi output HTTP JSON envelope (`success`, `data`, `message`, `error`, `meta`), view renderer, dan redirect.
+- **Migration Engine (`app/Core/MigrationRunner.php`):**
+  - Eksekusi migrasi berurutan terverifikasi dengan pencatatan tabel `schema_migrations` (id, migration_name, batch, executed_at, SHA-256 checksum, execution_time_ms).
+  - Snapshot backup otomatis sebelum setiap proses migrasi baru dijalankan.
+- **3 Migrasi Skema Baseline (`database/migrations/`):**
+  - `001_create_core_tables.php` (`users`, `user_settings`, `system_settings`, `audit_logs`).
+  - `002_create_ai_and_connector_tables.php` (`ai_providers`, `ai_models`, `connectors`, `platform_connections`, `connection_credentials`, `connection_scopes`, `oauth_states`).
+  - `003_create_data_and_analytics_tables.php` (`sync_jobs`, `sync_logs`, `sync_cursors`, `data_sources`, `datasets`, `dataset_columns`, `data_records`, `analysis_sessions`, `analysis_messages`, `analysis_results`, `analysis_sources`, `reports`, `scheduled_tasks`, `notifications`, `ai_usage_logs`, `app_cache`).
+- **Controllers & Entrypoints:**
+  - `app/Controllers/AuthController.php` (login, logout, me, change-password untuk Web dan API).
+  - `app/Controllers/HomeController.php` (landing redirect, dashboard transitional, health check API).
+  - `routes/web.php` dan `routes/api.php`.
+  - `public/index.php` front controller dan `public/.htaccess`.
+  - `database/migrate.php` CLI migration runner & `database/seeders/create_user.php` single-user seeder.
+- **Automated Test Suite (`tests/run_tests.php`):**
+  - 6 unit & integration test suites komprehensif berjalan 100% lulus di lingkungan database testing terisolasi (`anabot_testing.sqlite`).
+
+---
+
 ## [0.1.0-dev] - 2026-11-27 (FASE 0 — Pemeriksaan Lingkungan & Perencanaan)
 
 ### Ditambahkan (Added)
