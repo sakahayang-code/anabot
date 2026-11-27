@@ -91,6 +91,8 @@ $statusBadge = match ($connection['status']) {
         <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.875rem;">
             <?= e($flashError) ?>
         </div>
+    <?php endif; ?>
+
     <!-- Google Sheets Permission Banner -->
     <?php if ($connection['connector_code'] === 'google_sheets'): ?>
         <?php
