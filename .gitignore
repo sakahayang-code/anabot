@@ -1,0 +1,52 @@
+# AnaBot .gitignore - Strict Protection of Production Data and Secrets
+
+# Environment & Secret Keys
+.env
+.env.*
+!.env.example
+encryption.key
+*.key
+*.pem
+*.secret
+
+# SQLite Databases (Never commit actual database files)
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3
+*.db
+anabot.sqlite
+anabot_*.sqlite
+
+# Backups
+/storage/backups/*
+!/storage/backups/.gitkeep
+*.bak
+*.backup
+
+# Runtime Storage
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/reports/*
+!/storage/reports/.gitkeep
+/storage/cache/*
+!/storage/cache/.gitkeep
+/storage/temp/*
+!/storage/temp/.gitkeep
+/storage/queue/*
+!/storage/queue/.gitkeep
+
+# External / Production Data Directories
+/anabot_data/
+/anabot_secrets/
+
+# Dependencies
+/vendor/
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
