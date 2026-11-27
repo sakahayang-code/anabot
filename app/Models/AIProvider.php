@@ -25,6 +25,12 @@ class AIProvider
         );
     }
 
+    public static function allActive(): array
+    {
+        $db = Database::getInstance();
+        return $db->queryAll("SELECT * FROM ai_providers WHERE is_active = 1 ORDER BY is_primary DESC, id ASC");
+    }
+
     public static function find(int $id): ?array
     {
         $db = Database::getInstance();

@@ -77,5 +77,17 @@ $router->group(['prefix' => '/api/v1'], function (Router $api) {
         $authApi->post('/ai/test/{code}', [\AnaBot\Controllers\AIController::class, 'testProviderApi']);
         $authApi->post('/ai/generate', [\AnaBot\Controllers\AIController::class, 'generateApi']);
         $authApi->get('/ai/usage', [\AnaBot\Controllers\AIController::class, 'usageApi']);
+
+        // AI Analyst Endpoints (Phase 8)
+        $authApi->get('/ai/sessions', [\AnaBot\Controllers\AIAnalystController::class, 'getSessions']);
+        $authApi->post('/ai/sessions', [\AnaBot\Controllers\AIAnalystController::class, 'createSession']);
+        $authApi->get('/ai/sessions/{id}', [\AnaBot\Controllers\AIAnalystController::class, 'getSession']);
+        $authApi->put('/ai/sessions/{id}', [\AnaBot\Controllers\AIAnalystController::class, 'updateSession']);
+        $authApi->delete('/ai/sessions/{id}', [\AnaBot\Controllers\AIAnalystController::class, 'deleteSession']);
+        $authApi->post('/ai/sessions/{id}/messages', [\AnaBot\Controllers\AIAnalystController::class, 'sendMessage']);
+        $authApi->post('/ai/sessions/{id}/quick-action', [\AnaBot\Controllers\AIAnalystController::class, 'quickAction']);
+        $authApi->get('/ai/sessions/{id}/context', [\AnaBot\Controllers\AIAnalystController::class, 'getContextPreview']);
+        $authApi->post('/ai/sessions/{id}/clear', [\AnaBot\Controllers\AIAnalystController::class, 'clearMessages']);
     });
 });
+

@@ -22,6 +22,11 @@ class Router
         return $this->addRoute('POST', $path, $handler, $middleware);
     }
 
+    public function put(string $path, callable|array|string $handler, array $middleware = []): self
+    {
+        return $this->addRoute('PUT', $path, $handler, $middleware);
+    }
+
     public function patch(string $path, callable|array|string $handler, array $middleware = []): self
     {
         return $this->addRoute('PATCH', $path, $handler, $middleware);

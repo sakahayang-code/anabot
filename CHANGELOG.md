@@ -4,6 +4,52 @@ Seluruh perubahan penting pada proyek AnaBot dicatat dalam dokumen ini. Format m
 
 ---
 
+## [0.9.0-dev] - 2026-11-27 (FASE 8 — AI Analyst & Grounded Conversational Intelligence)
+
+### Ditambahkan (Added)
+- **Mesin Kompilasi Fakta Data Terverifikasi (`app/Services/AIContextBuilder.php`):**
+  - Mengompilasi fakta data matematis dari SQLite dan `AnalyticsEngine` secara deterministik untuk satu atau lebih dataset tertaut.
+  - Ekstraksi otomatis statistik deskriptif (Mean, Median, Min, Max, StdDev, IQR), laju pertumbuhan (DoD, WoW, MoM, YoY, CAGR), arah tren OLS ($R^2$ dan normalized slope), korelasi Pearson $r$ antar-metrik, dan rincian dimensi Pareto 80/20.
+  - Deteksi titik puncak (*peak*), titik terendah (*valley*), lonjakan pertumbuhan terbesar, dan penurunan tercuram.
+  - Format output markdown terstruktur dan ringkasan kartu KPI untuk disuntikkan ke prompt LLM dan widget dashboard.
+- **Model Manajemen Sesi & Pesan Analisis (`app/Models/AnalysisSession.php` & `app/Models/AnalysisMessage.php`):**
+  - `AnalysisSession`: CRUD sesi analisis, penautan dataset sumber multi-platform via `analysis_sources`, pembaruan timestamp, dan pembersihan sesi dengan integritas cascade deletion.
+  - `AnalysisMessage`: Penyimpanan percakapan berurutan (user & assistant), pelacakan penggunaan token input/output per giliran bicara, dan ekstraksi memori konteks percakapan multi-turn (`getRecentConversationHistory`).
+- **Orkestrator Percakapan AI Analyst (`app/Services/AIOrchestrator.php`):**
+  - Menghubungkan sesi percakapan, context builder, prompt manager, dan multi-provider inference `AIManager`.
+  - Penegakan Anti-Hallucination Guardrail: AI dilarang keras mengarang angka yang tidak ada dalam konteks komputasi deterministik.
+  - Eksekusi alur percakapan dinamis (`ask`) dan penanganan aksi analisis cepat satu-klik (`executeQuickAction`).
+  - Fitur pratinjau bukti fakta data terverifikasi (`getSessionFactsPreview`) untuk transparansi 100%.
+- **Pengembangan Prompt Analitik Khusus (`app/AI/PromptManager.php`):**
+  - `buildMultiTurnPrompt`: Menyusun pesan riwayat percakapan dengan penyuntikan fakta data terkini pada system instruction.
+  - `buildQuickActionPrompt`: Prompt khusus untuk 4 mode analisis eksekutif:
+    1. *Ringkasan Eksekutif Terpadu* (`executive_summary`)
+    2. *Diagnosis Akar Masalah & Pola Kinerja* (`root_cause_diagnosis`)
+    3. *Rekomendasi Aksi Strategis & Taktis* (`strategic_recommendations`)
+    4. *Investigasi Anomali & Fluktuasi Ekstrem* (`anomaly_detection`)
+- **Pengontrol Web & REST API AI Analyst (`app/Controllers/AIAnalystController.php`):**
+  - Web views: `chatPage` (`/ai`, `/ai/chat`, `/ai/chat/{id}`, `/ai/history`) dan `newSession` (`POST /ai/new`).
+  - REST API Endpoints:
+    - `GET /api/v1/ai/sessions`: Daftar seluruh sesi analisis pengguna.
+    - `POST /api/v1/ai/sessions`: Membuat sesi analisis baru dengan penautan dataset.
+    - `GET /api/v1/ai/sessions/{id}`: Rincian sesi dan riwayat pesan obrolan.
+    - `PUT /api/v1/ai/sessions/{id}`: Memperbarui judul sesi atau dataset tertaut.
+    - `DELETE /api/v1/ai/sessions/{id}`: Menghapus sesi beserta seluruh pesannya.
+    - `POST /api/v1/ai/sessions/{id}/messages`: Mengirim pertanyaan analisis dan memperoleh interpretasi AI grounded.
+    - `POST /api/v1/ai/sessions/{id}/quick-action`: Menjalankan analisis cepat 1-klik.
+    - `GET /api/v1/ai/sessions/{id}/context`: Pratinjau fakta data matematis murni yang disuntikkan ke AI.
+    - `POST /api/v1/ai/sessions/{id}/clear`: Membersihkan riwayat pesan dalam sesi.
+- **Antarmuka Interaktif AI Analyst Workspace (`resources/views/ai/chat.php`):**
+  - Desain modern SaaS responsive dengan tema gelap/terang, panel riwayat sesi di sidebar kiri, dan pemilih dataset multi-select instan.
+  - Bilah kartu ringkasan bento KPI instan dari data terverifikasi.
+  - Alur obrolan interaktif dengan markdown renderer, status pengetikan real-time, badge konsumsi token, dan starter prompt suggestions.
+  - Modal inspeksi bukti data terverifikasi (*Grounded Data Transparency Inspector*) untuk melihat angka komputasi matematis yang digunakan AI.
+- **Automated Test Suite Phase 8 (`tests/Unit/AIAnalystTest.php`):**
+  - 10 skenario pengujian komprehensif pada database SQLite terisolasi: CRUD sesi, penautan dataset, persistensi pesan, riwayat percakapan multi-turn, kompilasi fakta `AIContextBuilder`, prompt guardrail anti-halusinasi, aksi analisis cepat, eksekusi query grounded `AIOrchestrator::ask`, dan integritas cascade deletion.
+  - **13/13 automated test suites lulus 100%**.
+
+---
+
 ## [0.8.0-dev] - 2026-11-27 (FASE 7 — Multi-Provider AI Framework)
 
 ### Ditambahkan (Added)

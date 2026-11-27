@@ -162,4 +162,111 @@ PROMPT;
             ['role' => 'user', 'content' => $userPrompt],
         ];
     }
+
+    /**
+     * Build multi-turn conversational prompt with verified context grounding.
+     *
+     * @param string $factualMarkdown Formatted facts from AIContextBuilder
+     * @param array $conversationHistory Prior messages [{'role' => 'user'|'assistant', 'content' => ...}]
+     * @param string $userQuery Current user query
+     * @param array $options Optional settings
+     * @return array Standard messages array for AI provider
+     */
+    public static function buildMultiTurnPrompt(
+        string $factualMarkdown,
+        array $conversationHistory,
+        string $userQuery,
+        array $options = []
+    ): array {
+        $system = self::buildSystemInstruction();
+
+        // System message includes both core guardrails and the grounded factual data
+        $systemWithFacts = $system . "\n\n" . $factualMarkdown;
+
+        $messages = [
+            ['role' => 'system', 'content' => $systemWithFacts],
+        ];
+
+        // Append recent conversation history
+        foreach ($conversationHistory as $turn) {
+            if (!empty($turn['role']) && !empty($turn['content'])) {
+                $messages[] = [
+                    'role' => $turn['role'] === 'user' ? 'user' : 'assistant',
+                    'content' => (string) $turn['content'],
+                ];
+            }
+        }
+
+        // Append current user query
+        $messages[] = [
+            'role' => 'user',
+            'content' => $userQuery,
+        ];
+
+        return $messages;
+    }
+
+    /**
+     * Build specialized quick-action prompts (Executive Summary, Diagnosis, Recommendations, Anomaly).
+     */
+    public static function buildQuickActionPrompt(
+        string $actionType,
+        string $factualMarkdown,
+        array $options = []
+    ): array {
+        $system = self::buildSystemInstruction() . "\n\n" . $factualMarkdown;
+
+        switch ($actionType) {
+            case 'executive_summary':
+                $userPrompt = <<<QUERY
+Mohon buatkan **Ringkasan Eksekutif (Executive Summary)** menyeluruh berdasarkan data faktual terverifikasi di atas:
+1. **Highlight Utama:** Rangkum performa kunci (total volume, rata-rata, arah tren OLS, dan laju pertumbuhan).
+2. **Kategori Penentu:** Jelaskan kontributor terbesar berdasarkan prinsip Pareto 80/20.
+3. **Hubungan Antar-Metrik:** Paparkan korelasi Pearson terkuat yang ditemukan.
+4. **Peluang & Risiko Utama:** Identifikasi potensi pertumbuhan dan risiko penurunan yang tampak dari fluktuasi data.
+
+Gunakan format Markdown profesional dengan bullet points dan heading yang jelas.
+QUERY;
+                break;
+
+            case 'root_cause_diagnosis':
+                $userPrompt = <<<QUERY
+Lakukan **Diagnosis Akar Masalah & Pola Kinerja (Root Cause Analysis)** mendalam:
+1. Analisis periode fluktuasi tajam (penurunan tercuram atau lonjakan tertinggi) berdasarkan data sorotan.
+2. Evaluasi hubungan sebab-akibat potensial menggunakan matriks korelasi Pearson (variabel mana yang saling menguatkan atau melemahkan).
+3. Telaah apakah penurunan terkonsentrasi pada dimensi kategori tertentu atau menyebar ke seluruh segmen.
+4. Simpulkan faktor pemicu dominan yang paling menjelaskan performa saat ini.
+QUERY;
+                break;
+
+            case 'strategic_recommendations':
+                $userPrompt = <<<QUERY
+Berdasarkan bukti data matematis aktual di atas, rumuskan **3 hingga 5 Rekomendasi Aksi Strategis & Taktis**:
+- Setiap rekomendasi HARUS merujuk langsung ke angka data terverifikasi (misalnya merujuk ke kategori Pareto 80%, laju pertumbuhan, atau koefisien korelasi).
+- Tentukan tingkat prioritas (Tinggi / Sedang / Rendah).
+- Jelaskan dampak bisnis yang diharapkan dan indikator keberhasilan (KPI) yang perlu dipantau.
+QUERY;
+                break;
+
+            case 'anomaly_detection':
+                $userPrompt = <<<QUERY
+Lakukan **Investigasi Anomali & Fluktuasi Ekstrem**:
+1. Sorot titik data tertinggi (peak) dan terendah (valley) serta periode terjadinya.
+2. Analisis lonjakan persentase perubahan terbesar (+%) dan penurunan tercuram (-%).
+3. Evaluasi apakah fluktuasi tersebut merupakan anomali sporadis atau bagian dari perubahan tren jangka panjang.
+4. Berikan panduan pemantauan data ke depan.
+QUERY;
+                break;
+
+            default:
+                $userPrompt = "Berikan interpretasi komprehensif dan rekomendasi berbasis fakta data di atas.";
+                break;
+        }
+
+        return [
+            ['role' => 'system', 'content' => $system],
+            ['role' => 'user', 'content' => $userPrompt],
+        ];
+    }
 }
+

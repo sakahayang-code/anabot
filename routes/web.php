@@ -5,6 +5,7 @@ declare(strict_types=1);
  * AnaBot Web Routes
  */
 
+use AnaBot\Controllers\AIAnalystController;
 use AnaBot\Controllers\AuthController;
 use AnaBot\Controllers\DashboardController;
 use AnaBot\Controllers\DataExplorerController;
@@ -25,43 +26,12 @@ $router->group(['middleware' => ['auth']], function (Router $auth) {
     $auth->post('/logout', [AuthController::class, 'logout'], ['csrf']);
     $auth->get('/dashboard', [DashboardController::class, 'index']);
 
-    // 2. AI Analyst (Roadmap Phase 8)
-    $auth->get('/ai/chat', function () {
-        (new ModulePlaceholderController())->show(
-            'AI Analyst - Chat Analyst',
-            8,
-            'Antarmuka tanya-jawab dan percakapan analitik dengan grounding data riil dari SQLite.',
-            [
-                ['title' => 'Data-Grounded QA', 'desc' => 'Menjawab pertanyaan berbasis konteks data aktual yang telah dihitung statistik.'],
-                ['title' => 'Anti-Halusinasi', 'desc' => 'AI dilarang mengarang angka statistik di luar hasil komputasi PHP.'],
-                ['title' => 'Multi-Turn Sessions', 'desc' => 'Menyimpan riwayat percakapan dan ringkasan insight ke dalam database.']
-            ]
-        );
-    });
-
-    $auth->get('/ai/new', function () {
-        (new ModulePlaceholderController())->show(
-            'AI Analyst - New Analysis',
-            8,
-            'Mulai sesi analisis baru untuk dataset terpilih dengan template analisis eksekutif.',
-            [
-                ['title' => 'Pilih Dataset', 'desc' => 'Pilih dataset sumber yang telah disinkronisasi.'],
-                ['title' => 'Mode Analisis', 'desc' => 'Eksplorasi tren, perbandingan metrik, atau deteksi masalah bisnis.']
-            ]
-        );
-    });
-
-    $auth->get('/ai/history', function () {
-        (new ModulePlaceholderController())->show(
-            'AI Analyst - History',
-            8,
-            'Daftar riwayat sesi percakapan analitik dan arsip insight yang pernah dibuat.',
-            [
-                ['title' => 'Pencarian Sesi', 'desc' => 'Filter riwayat analisis berdasarkan tanggal atau dataset.'],
-                ['title' => 'Buka Ulang Sesi', 'desc' => 'Lanjutkan diskusi analitis dari titik terakhir.']
-            ]
-        );
-    });
+    // 2. AI Analyst (Active Phase 8)
+    $auth->get('/ai', [AIAnalystController::class, 'chatPage']);
+    $auth->get('/ai/chat', [AIAnalystController::class, 'chatPage']);
+    $auth->get('/ai/chat/{id}', [AIAnalystController::class, 'chatPage']);
+    $auth->post('/ai/new', [AIAnalystController::class, 'newSession'], ['csrf']);
+    $auth->get('/ai/history', [AIAnalystController::class, 'chatPage']);
 
     // 3. Data Sources (Active Phase 4)
     $auth->get('/connectors', [\AnaBot\Controllers\ConnectorController::class, 'index']);

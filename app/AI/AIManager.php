@@ -29,8 +29,23 @@ class AIManager
     private HttpClient $httpClient;
     private Logger $logger;
 
+    private static ?AIManager $instance = null;
+
     /** @var array<string, AIProviderInterface> */
     private array $customProviders = [];
+
+    public static function getInstance(?Database $db = null, ?Encryption $encryption = null, ?HttpClient $httpClient = null): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self($db, $encryption, $httpClient);
+        }
+        return self::$instance;
+    }
+
+    public static function setInstance(?AIManager $manager): void
+    {
+        self::$instance = $manager;
+    }
 
     public function __construct(
         ?Database $db = null,
@@ -220,6 +235,22 @@ class AIManager
         // No fallback available
         $result['fallback_used'] = false;
         return $result;
+    }
+
+    /**
+     * Generate chat completion with multi-turn messages array and automatic fallback.
+     */
+    public function generateChat(array $messages, array $options = []): array
+    {
+        return $this->generateWithFallback($messages, $options);
+    }
+
+    /**
+     * Generate text completion with automatic fallback.
+     */
+    public function generateText(string $prompt, array $options = []): array
+    {
+        return $this->generateWithFallback($prompt, $options);
     }
 
     /**
